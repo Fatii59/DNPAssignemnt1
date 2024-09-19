@@ -6,6 +6,18 @@ public class UserInMemoryRepository : IUserRepository
 {
     private List<User> users = new List<User>();
 
+
+    public UserInMemoryRepository()
+    {
+        // dummy data
+        users = new List<User>
+        {
+            new User { Id = 1, UserName = "Bo sted", Password = "FoorLife" },
+            new User { Id = 2, UserName = "Kilimanjro", Password = "Tanzania" },
+            new User { Id = 3, UserName = "Fiji", Password = "KillBill" }
+        };
+    }
+
     public Task<User> AddAsync(User user)
     {
         user.Id = users.Any()
@@ -55,6 +67,5 @@ public class UserInMemoryRepository : IUserRepository
     {
         return users.AsQueryable();
     }
-    
-    //Dummy data??
+
 }

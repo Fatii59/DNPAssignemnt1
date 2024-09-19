@@ -6,6 +6,29 @@ using RepostitoryContracts;
 public class PostInMemoryRepository : IPostRepository
 {
     private List<Post> posts = new List<Post>();
+    
+    public PostInMemoryRepository()
+    {
+        // dummy data
+        posts = new List<Post>
+        {
+            new Post
+            {
+                Id = 1,
+                Title = "Welcome to the Blog!",
+                Body= "This is the first post on this blog. Feel free to leave comments!",
+                UserId = 1, 
+            },
+            new Post
+            {
+                Id = 2,
+                Title = "Another Interesting Post",
+                Body = "This is a second post to showcase the functionality.",
+                UserId = 2, 
+            
+            }
+        };
+    }
 
     public Task<Post> AddAsync(Post post)
     {
@@ -56,8 +79,6 @@ public class PostInMemoryRepository : IPostRepository
     {
         return posts.AsQueryable();
     }
-
-  
-    //Dummy data??
+    
 
 }

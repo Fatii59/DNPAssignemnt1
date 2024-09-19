@@ -8,7 +8,31 @@ public class CommentInMemoryRepository : ICommentRepository
 
 {
     private List<Comment> comments = new List<Comment>();
-    
+
+    public CommentInMemoryRepository()
+    {
+// dummy data
+        comments = new List<Comment>
+        {
+            new Comment
+            {
+                Id = 1,
+                PostId = 1, 
+                Body = "This is a great first post!",
+                UserId = 3,
+
+            },
+            new Comment
+            {
+                Id = 2,
+                PostId = 2, 
+                Body = "Looking forward to more content!",
+                UserId = 1, 
+
+            }
+        };
+    }
+
     public Task<Comment> AddAsync(Comment comment)
     {
         comment.Id = comments.Any()   ? comments.Max(c => c.Id) + 1
