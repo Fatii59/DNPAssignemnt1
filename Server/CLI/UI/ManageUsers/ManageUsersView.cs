@@ -20,8 +20,9 @@ public class ManageUsersView
         Console.WriteLine("== Manage Users ==");
         Console.WriteLine("1. Create User");
         Console.WriteLine("2. List Users");
-        Console.WriteLine("Enter your choice: ");
-        
+        Console.WriteLine("3. Edit User");
+        Console.WriteLine("4. Delete User");
+        Console.Write("Enter your choice: ");
         var choice=Console.ReadLine();
         switch (choice)
         {
@@ -31,10 +32,28 @@ public class ManageUsersView
             case "2":
                 await ShowListUsersViewAsync();
                 break;
+            case "3":
+                await ShowEditUserViewAsync();
+                break;
+            case "4":
+                await ShowDeleteUserViewAsync();
+                break;
             default:
                 Console.WriteLine("Invalid choice");
                 break;
         }
+    }
+    
+    private async Task ShowEditUserViewAsync()
+    {
+        var editUserView = new EditUserView(_userRepository);
+        await editUserView.DisplayAsync();
+    }
+
+    private async Task ShowDeleteUserViewAsync()
+    {
+        var deleteUserView = new DeleteUserView(_userRepository);
+        await deleteUserView.DisplayAsync();
     }
 
     private async Task ShowListUsersViewAsync()
