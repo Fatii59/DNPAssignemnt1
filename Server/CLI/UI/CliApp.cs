@@ -1,5 +1,4 @@
 ﻿using RepostitoryContracts;
-using InMemoryRepositories;
 using System.Threading.Tasks;
 using CLI.UI.ManageComments;
 using CLI.UI.ManagePosts;
