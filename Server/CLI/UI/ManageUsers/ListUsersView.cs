@@ -1,34 +1,37 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Entities;
-using RepostitoryContracts;
+// Ensure this namespace is correct
+using Services; // Make sure this is the namespace for your service interfaces
 
-namespace CLI.UI.ManageUsers;
-
-public class ListUsersView
+namespace CLI.UI.ManageUsers
 {
-    private readonly IUserRepository _userRepository;
-
-    public ListUsersView(IUserRepository userRepository)
+    public class ListUsersView
     {
-        _userRepository = userRepository;
-    }
+        private readonly IUserService _userService; // Change to use IUserService
 
-    public async Task DisplayAsync()
-    {
-        Console.WriteLine("Listing all users");
-
-        var users = _userRepository.GetMany().ToList();
-        if (users.Count == 0)
+        public ListUsersView(IUserService userService) // Inject IUserService
         {
-            Console.WriteLine("There are no users");
-            return;
+            _userService = userService;
         }
 
-        foreach (var user in users)
+        public async Task DisplayAsync()
         {
-           Console.WriteLine($"ID: {user.Id}, Username: {user.UserName}"); 
+            Console.WriteLine("Listing all users");
+
+            // Use the UserService to get the list of users
+            var users = await _userService.GetAllUsersAsync(); // Ensure this method exists in your IUserService
+            if (users.Count == 0)
+            {
+                Console.WriteLine("There are no users");
+                return;
+            }
+
+            foreach (var user in users)
+            {
+                Console.WriteLine($"ID: {user.Id}, Username: {user.UserName}"); 
+            }
         }
     }
 }

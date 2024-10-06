@@ -3,18 +3,19 @@ using System.Threading.Tasks;
 using CLI.UI.ManageComments;
 using CLI.UI.ManagePosts;
 using CLI.UI.ManageUsers;
+using Services;
 
 namespace CLI.UI;
 
 public class CliApp
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUserService _userService;
     private readonly ICommentRepository _commentRepository;
     private readonly IPostRepository _postRepository;
 
-    public CliApp(IUserRepository userRepository, ICommentRepository commentRepository, IPostRepository postRepository)
+    public CliApp(IUserService userService, ICommentRepository commentRepository, IPostRepository postRepository)
     {
-        _userRepository = userRepository;
+        _userService = userService;
         _commentRepository = commentRepository;
         _postRepository = postRepository;
     }
@@ -57,7 +58,7 @@ public class CliApp
 
     private async Task DisplayUserManagementMenuAsync()
     {
-        var manageUsersView = new ManageUsersView(_userRepository);
+        var manageUsersView = new ManageUsersView(_userService);  // Pass UserService instead of IUserRepository
         await manageUsersView.DisplayMenuAsync();
     }
 

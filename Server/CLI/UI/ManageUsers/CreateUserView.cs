@@ -1,38 +1,35 @@
 ﻿using Entities;
 using RepostitoryContracts;
+using Services;
+
 
 namespace CLI.UI.ManageUsers;
 
 public class CreateUserView
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUserService _userService;
 
-    public CreateUserView(IUserRepository userRepository)
+    public CreateUserView(IUserService userService)
     {
-        _userRepository = userRepository;
+        _userService = userService;
     }
 
     public async Task DisplayAsync()
     {
-        Console.WriteLine(" Create a new user: ");
         Console.Write("Enter username: ");
         string userName = Console.ReadLine();
+        
+        Console.Write("Enter password: ");
+        string password = Console.ReadLine();
 
-        if (string.IsNullOrEmpty(userName))
+        try
         {
-            Console.WriteLine("Username cannot be empty! Please try again. ");
-            return;
+            var createdUser = await _userService.CreateUserAsync(userName, password);
+            Console.WriteLine($"User '{createdUser.UserName}' has been created!");
         }
-        var existingUsers = _userRepository.GetMany().ToList();
-        if (existingUsers.Any(u => u.UserName == userName))
+        catch (Exception ex)
         {
-            Console.WriteLine("Username already exists! Please try again. ");
-            return;
+            Console.WriteLine($"Error: {ex.Message}");
         }
-        
-        var user= new User{UserName = userName};
-        var createdUser =await _userRepository.AddAsync(user);
-        
-        Console.WriteLine($"User '{createdUser.UserName}' has been created!");
     }
 }

@@ -1,15 +1,16 @@
 ﻿using Entities;
-using RepostitoryContracts;
+ // Ensure this namespace is correct
+using Services; // Include this if you have a UserService
 
-namespace CLI.UI.ManageUsers;
-
-public class EditUserView
+namespace CLI.UI.ManageUsers
 {
-    private readonly IUserRepository _userRepository;
+    public class EditUserView
+    {
+        private readonly IUserService _userService; // Change to UserService
 
-        public EditUserView(IUserRepository userRepository)
+        public EditUserView(IUserService userService) // Inject IUserService
         {
-            _userRepository = userRepository;
+            _userService = userService;
         }
 
         public async Task DisplayAsync()
@@ -23,28 +24,30 @@ public class EditUserView
 
             try
             {
-                
-                var user = await _userRepository.GetSingleAsync(userId);
+                var user = await _userService.GetUserByIdAsync(userId); // Use the service to get the user
                 if (user == null)
                 {
                     Console.WriteLine($"User with ID {userId} not found.");
                     return;
                 }
 
-              
                 DisplayUserDetails(user);
 
-                
                 Console.WriteLine("Enter new username (or press Enter to keep current): ");
                 var newUsername = Console.ReadLine();
-                if (!string.IsNullOrEmpty(newUsername)) user.UserName = newUsername;
+                if (!string.IsNullOrEmpty(newUsername)) 
+                {
+                    user.UserName = newUsername; // Update username if provided
+                }
 
                 Console.WriteLine("Enter new password (or press Enter to keep current): ");
                 var newPassword = Console.ReadLine();
-                if (!string.IsNullOrEmpty(newPassword)) user.Password = newPassword;
+                if (!string.IsNullOrEmpty(newPassword)) 
+                {
+                    user.Password = newPassword; // Update password if provided
+                }
 
-                
-                await _userRepository.UpdateAsync(user);
+                await _userService.UpdateUserAsync(user); // Use the service to update the user
                 Console.WriteLine("User updated successfully.");
             }
             catch (Exception ex)
@@ -58,6 +61,7 @@ public class EditUserView
             Console.WriteLine("=== Current User Details ===");
             Console.WriteLine($"ID: {user.Id}");
             Console.WriteLine($"Username: {user.UserName}");
-            Console.WriteLine($"Password: {user.Password}");
+            Console.WriteLine($"Password: {new string('*', user.Password.Length)}"); // Masked password display
         }
     }
+}

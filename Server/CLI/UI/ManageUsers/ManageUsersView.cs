@@ -1,18 +1,18 @@
 ﻿using System.Threading.Tasks;
 using RepostitoryContracts;
 using Entities;
+using Services;
 
 namespace CLI.UI.ManageUsers;
 
 public class ManageUsersView
 {
     
-    private readonly IUserRepository _userRepository;
+    private readonly IUserService _userService;
 
-
-    public ManageUsersView(IUserRepository userRepository)
+    public ManageUsersView(IUserService userService)  // Accept UserService instead of IUserRepository
     {
-        _userRepository = userRepository;
+        _userService = userService;
     }
 
     public async Task DisplayMenuAsync()
@@ -23,7 +23,7 @@ public class ManageUsersView
         Console.WriteLine("3. Edit User");
         Console.WriteLine("4. Delete User");
         Console.Write("Enter your choice: ");
-        var choice=Console.ReadLine();
+        var choice = Console.ReadLine();
         switch (choice)
         {
             case "1":
@@ -46,52 +46,83 @@ public class ManageUsersView
     
     private async Task ShowEditUserViewAsync()
     {
-        var editUserView = new EditUserView(_userRepository);
+        var editUserView = new EditUserView(_userService);  // Use _userService
         await editUserView.DisplayAsync();
     }
 
     private async Task ShowDeleteUserViewAsync()
     {
-        var deleteUserView = new DeleteUserView(_userRepository);
+        var deleteUserView = new DeleteUserView(_userService);  // Use _userService
         await deleteUserView.DisplayAsync();
     }
 
     private async Task ShowListUsersViewAsync()
     {
-        var listUserView = new ListUsersView(_userRepository);
+        var listUserView = new ListUsersView(_userService);  // Use _userService
         await listUserView.DisplayAsync();
     }
+
     private async Task ListUsersAsync()
     {
-        var users = _userRepository.GetMany().ToList();
+        var users = await _userService.GetAllUsersAsync(); // Call the service method to get users
 
-        if (users.Count == 0)
+        if (users == null || users.Count == 0)
         {
             Console.WriteLine("No data found");
             return;
         }
-        
+    
         Console.WriteLine("Users:");
         foreach (var user in users)
         {
             Console.WriteLine($"ID: {user.Id}, Username: {user.UserName}");
         }
     }
+    
 
     private async Task CreateUserAsync()
     {
         Console.WriteLine("== Create new User ==");
-        Console.WriteLine("Enter username: ");
-        string userName = Console.ReadLine();
 
-        if (string.IsNullOrEmpty(userName))
+        string userName;
+        while (true)
         {
-            Console.WriteLine("Invalid username");
+            Console.Write("Enter username: ");
+            userName = Console.ReadLine();
+
+            if (string.IsNullOrEmpty(userName))
+            {
+                Console.WriteLine("Invalid username. Please try again.");
+                continue;
+            }
+
+            // Check if the username already exists
+            var existingUsers = await _userService.GetAllUsersAsync();
+            if (existingUsers.Any(u => u.UserName == userName))
+            {
+                Console.WriteLine("Username already exists. Please choose another.");
+            }
+            else
+            {
+                break; // Valid username, exit the loop
+            }
+        }
+
+        Console.Write("Enter password (at least 6 characters): ");
+        string password = Console.ReadLine();
+
+        // Check password length
+        if (string.IsNullOrEmpty(password) || password.Length < 6)
+        {
+            Console.WriteLine("Invalid password. It must be at least 6 characters.");
             return;
         }
-        
-        var user= new User{UserName = userName};
-        await _userRepository.AddAsync(user);
+
+        await _userService.CreateUserAsync(userName, password);
         Console.WriteLine($"User '{userName}' has been created successfully");
     }
+
+
+
+
 }

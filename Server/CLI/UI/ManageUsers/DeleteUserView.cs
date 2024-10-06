@@ -1,14 +1,16 @@
 ﻿using RepostitoryContracts;
+using Services;
 
 namespace CLI.UI.ManageUsers;
 
 public class DeleteUserView
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUserService _userService;
 
-    public DeleteUserView(IUserRepository userRepository)
+    // Injecting the UserService instead of the repository
+    public DeleteUserView(IUserService userService)
     {
-        _userRepository = userRepository;
+        _userService = userService;
     }
 
     public async Task DisplayAsync()
@@ -22,20 +24,21 @@ public class DeleteUserView
 
         try
         {
-         
-            var user = await _userRepository.GetSingleAsync(userId);
+            // Fetch user via the service
+            var user = await _userService.GetUserByIdAsync(userId);
             if (user == null)
             {
                 Console.WriteLine($"User with ID {userId} not found.");
                 return;
             }
 
-            
+            // Confirm deletion with the user
             Console.WriteLine($"Are you sure you want to delete the user \"{user.UserName}\"? (y/n)");
             var confirmation = Console.ReadLine();
             if (confirmation?.ToLower() == "y")
             {
-                await _userRepository.DeleteAsync(userId);
+                // Use the service to delete the user
+                await _userService.DeleteUserAsync(userId);
                 Console.WriteLine("User deleted successfully.");
             }
             else
