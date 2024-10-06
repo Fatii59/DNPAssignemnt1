@@ -4,7 +4,7 @@ using RepostitoryContracts;
 
 namespace Services;
 
-// Create a UserService class
+
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
@@ -16,7 +16,7 @@ public class UserService : IUserService
 
     public async Task<User?> GetUserByIdAsync(int id)
     {
-        // You could add any additional business logic here if needed
+        // additional business logic??
         return await _userRepository.GetSingleAsync(id);
     }
 
@@ -56,18 +56,17 @@ public class UserService : IUserService
         await _userRepository.DeleteAsync(id);
     }
 
-    // Example utility function for password hashing
+  
     private string HashPassword(string password)
     {
-        // For now, you can return plain text, but switch to bcrypt/Hashing in Step 2.
+     
         return password;
     }
 
 
     public async Task<List<User>> GetAllUsersAsync()
     {
-        // GetMany() returns IQueryable, so we need to materialize it into a List
-        var users = _userRepository.GetMany().ToList(); // Executes the query
+        var users = _userRepository.GetMany().ToList(); 
         return await Task.FromResult(users); // Return as an asynchronous operation
     }
 

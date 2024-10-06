@@ -1,14 +1,14 @@
 ﻿using Entities;
- // Ensure this namespace is correct
-using Services; // Include this if you have a UserService
+
+using Services; 
 
 namespace CLI.UI.ManageUsers
 {
     public class EditUserView
     {
-        private readonly IUserService _userService; // Change to UserService
+        private readonly IUserService _userService;
 
-        public EditUserView(IUserService userService) // Inject IUserService
+        public EditUserView(IUserService userService) 
         {
             _userService = userService;
         }
@@ -24,7 +24,7 @@ namespace CLI.UI.ManageUsers
 
             try
             {
-                var user = await _userService.GetUserByIdAsync(userId); // Use the service to get the user
+                var user = await _userService.GetUserByIdAsync(userId); 
                 if (user == null)
                 {
                     Console.WriteLine($"User with ID {userId} not found.");
@@ -47,7 +47,7 @@ namespace CLI.UI.ManageUsers
                     user.Password = newPassword; // Update password if provided
                 }
 
-                await _userService.UpdateUserAsync(user); // Use the service to update the user
+                await _userService.UpdateUserAsync(user); 
                 Console.WriteLine("User updated successfully.");
             }
             catch (Exception ex)

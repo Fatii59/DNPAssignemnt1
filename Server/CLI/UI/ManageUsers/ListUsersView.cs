@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Entities;
-// Ensure this namespace is correct
-using Services; // Make sure this is the namespace for your service interfaces
+
+using Services; 
 
 namespace CLI.UI.ManageUsers
 {
     public class ListUsersView
     {
-        private readonly IUserService _userService; // Change to use IUserService
+        private readonly IUserService _userService;
 
-        public ListUsersView(IUserService userService) // Inject IUserService
+        public ListUsersView(IUserService userService) 
         {
             _userService = userService;
         }
@@ -21,7 +21,7 @@ namespace CLI.UI.ManageUsers
             Console.WriteLine("Listing all users");
 
             // Use the UserService to get the list of users
-            var users = await _userService.GetAllUsersAsync(); // Ensure this method exists in your IUserService
+            var users = await _userService.GetAllUsersAsync(); 
             if (users.Count == 0)
             {
                 Console.WriteLine("There are no users");

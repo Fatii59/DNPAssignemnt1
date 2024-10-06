@@ -10,7 +10,7 @@ public class ManageUsersView
     
     private readonly IUserService _userService;
 
-    public ManageUsersView(IUserService userService)  // Accept UserService instead of IUserRepository
+    public ManageUsersView(IUserService userService) 
     {
         _userService = userService;
     }
@@ -46,25 +46,25 @@ public class ManageUsersView
     
     private async Task ShowEditUserViewAsync()
     {
-        var editUserView = new EditUserView(_userService);  // Use _userService
+        var editUserView = new EditUserView(_userService);  
         await editUserView.DisplayAsync();
     }
 
     private async Task ShowDeleteUserViewAsync()
     {
-        var deleteUserView = new DeleteUserView(_userService);  // Use _userService
+        var deleteUserView = new DeleteUserView(_userService);  
         await deleteUserView.DisplayAsync();
     }
 
     private async Task ShowListUsersViewAsync()
     {
-        var listUserView = new ListUsersView(_userService);  // Use _userService
+        var listUserView = new ListUsersView(_userService);  
         await listUserView.DisplayAsync();
     }
 
     private async Task ListUsersAsync()
     {
-        var users = await _userService.GetAllUsersAsync(); // Call the service method to get users
+        var users = await _userService.GetAllUsersAsync(); 
 
         if (users == null || users.Count == 0)
         {
