@@ -2,6 +2,7 @@
 using Entities;
 using RepostitoryContracts;
 
+/*
 public class UserInMemoryRepository : IUserRepository
 {
     private List<User> users = new List<User>();
@@ -68,4 +69,7 @@ public class UserInMemoryRepository : IUserRepository
         return users.AsQueryable();
     }
 
+
+
 }
+*/

@@ -2,7 +2,7 @@
 
 using Entities;
 using RepostitoryContracts;
-
+/*
 public class PostInMemoryRepository : IPostRepository
 {
     private List<Post> posts = new List<Post>();
@@ -75,10 +75,11 @@ public class PostInMemoryRepository : IPostRepository
         return Task.FromResult(post);
     }
 
-    public IQueryable<Post> GetMany()
+    public async Task<IQueryable<Post>> GetMany()
     {
         return posts.AsQueryable();
     }
     
 
 }
+*/
