@@ -103,21 +103,11 @@ public class PostFileRepository : IPostRepository
         }
     }
 
-    public IQueryable<Post> GetMany()
+    public async Task<IQueryable<Post>> GetMany()
     {
-        try
-        {
-            string postsAsJson = File.ReadAllTextAsync(filePath).Result;
-            List<Post> posts = JsonSerializer.Deserialize<List<Post>>(postsAsJson) ?? new List<Post>();
-            return posts.AsQueryable();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error retrieving posts: {ex.Message}");
-            throw;
-        }
+        var posts = await LoadAsync(); // Load posts from file
+        return posts.AsQueryable();     // Return as IQueryable
     }
-
 
 
     private async Task<List<Post>> LoadAsync()

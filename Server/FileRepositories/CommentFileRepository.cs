@@ -1,164 +1,165 @@
-﻿namespace FileRepositories;
-
-using System.Text.Json;
+﻿using System.Text.Json;
 using Entities;
 using RepostitoryContracts;
 
-public class CommentFileRepository : ICommentRepository
+namespace FileRepositories
 {
-    private readonly string filePath = "comments.json";
-
-    public CommentFileRepository()
+    public class CommentFileRepository : ICommentRepository
     {
-        try
+        private readonly string filePath = "comments.json";
+
+        public CommentFileRepository()
         {
-            if (!File.Exists(filePath))
+            try
             {
-                File.WriteAllText(filePath, "[]"); 
+                if (!File.Exists(filePath))
+                {
+                    File.WriteAllText(filePath, "[]"); 
+                }
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"Error initializing file: {ex.Message}");
+                throw; 
             }
         }
-        catch (IOException ex)
-        {
-            Console.WriteLine($"Error initializing file: {ex.Message}");
-            throw; 
-        }
-    }
 
-    public async Task<Comment> AddAsync(Comment comment)
-    {
-        try
+        public async Task<Comment> AddAsync(Comment comment)
         {
-            var comments = await LoadAsync();
-            int maxId = comments.Count > 0 ? comments.Max(c => c.Id) : 0;
-            comment.Id = maxId + 1;
-            comments.Add(comment);
-            await SaveAsync(comments);
-            return comment;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error adding comment: {ex.Message}");
-            throw; 
-        }
-    }
-
-    public async Task UpdateAsync(Comment comment)
-    {
-        try
-        {
-            var comments = await LoadAsync();
-            var existingComment = comments.FirstOrDefault(c => c.Id == comment.Id);
-            if (existingComment != null)
+            try
             {
-                existingComment.Body = comment.Body;
+                var comments = await LoadAsync();
+                int maxId = comments.Count > 0 ? comments.Max(c => c.Id) : 0;
+                comment.Id = maxId + 1;
+                comments.Add(comment);
                 await SaveAsync(comments);
+                return comment;
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine($"Comment with ID {comment.Id} not found.");
+                Console.WriteLine($"Error adding comment: {ex.Message}");
+                throw; 
             }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error updating comment: {ex.Message}");
-            throw;
-        }
-    }
 
-    public async Task DeleteAsync(int id)
-    {
-        try
+        public async Task UpdateAsync(Comment comment)
         {
-            var comments = await LoadAsync();
-            var commentToDelete = comments.FirstOrDefault(c => c.Id == id);
-            if (commentToDelete != null)
+            try
             {
-                comments.Remove(commentToDelete);
-                await SaveAsync(comments);
+                var comments = await LoadAsync();
+                var existingComment = comments.FirstOrDefault(c => c.Id == comment.Id);
+                if (existingComment != null)
+                {
+                    existingComment.Body = comment.Body;
+                    await SaveAsync(comments);
+                }
+                else
+                {
+                    Console.WriteLine($"Comment with ID {comment.Id} not found.");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine($"Comment with ID {id} not found.");
+                Console.WriteLine($"Error updating comment: {ex.Message}");
+                throw;
             }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error deleting comment: {ex.Message}");
-            throw;
-        }
-    }
 
-    public async Task<Comment?> GetSingleAsync(int id)
-    {
-        try
+        public async Task DeleteAsync(int id)
         {
-            var comments = await LoadAsync();
-            return comments.FirstOrDefault(c => c.Id == id);
+            try
+            {
+                var comments = await LoadAsync();
+                var commentToDelete = comments.FirstOrDefault(c => c.Id == id);
+                if (commentToDelete != null)
+                {
+                    comments.Remove(commentToDelete);
+                    await SaveAsync(comments);
+                }
+                else
+                {
+                    Console.WriteLine($"Comment with ID {id} not found.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting comment: {ex.Message}");
+                throw;
+            }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error retrieving comment: {ex.Message}");
-            throw;
-        }
-    }
 
-    public IQueryable<Comment> GetMany()
-    {
-        try
+        public async Task<Comment?> GetSingleAsync(int id)
         {
-            string commentsAsJson = File.ReadAllTextAsync(filePath).Result;
-            List<Comment> comments = JsonSerializer.Deserialize<List<Comment>>(commentsAsJson) ?? new List<Comment>();
-            return comments.AsQueryable();
+            try
+            {
+                var comments = await LoadAsync();
+                return comments.FirstOrDefault(c => c.Id == id); // Return the comment if found, otherwise null
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving comment: {ex.Message}");
+                throw;
+            }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error retrieving comments: {ex.Message}");
-            throw;
-        }
-    }
 
-  
 
-    private async Task<List<Comment>> LoadAsync()
-    {
-        try
+        public async Task<IQueryable<Comment>> GetManyAsync()
         {
-            string commentsAsJson = await File.ReadAllTextAsync(filePath);
-            return JsonSerializer.Deserialize<List<Comment>>(commentsAsJson) ?? new List<Comment>();
+            try
+            {
+                var comments = await LoadAsync();  // Load comments asynchronously
+                return comments.AsQueryable();  // Return as IQueryable
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving comments: {ex.Message}");
+                throw;
+            }
         }
-        catch (FileNotFoundException)
-        {
-            Console.WriteLine("File not found. Creating a new one.");
-            return new List<Comment>(); 
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            Console.WriteLine($"Unauthorized access: {ex.Message}");
-            throw;
-        }
-        catch (JsonException ex)
-        {
-            Console.WriteLine($"Failed to deserialize JSON: {ex.Message}");
-            throw;
-        }
-    }
 
-    private async Task SaveAsync(List<Comment> comments)
-    {
-        try
+
+        private async Task<List<Comment>> LoadAsync()
         {
-            string commentsAsJson = JsonSerializer.Serialize(comments);
-            await File.WriteAllTextAsync(filePath, commentsAsJson);
+            try
+            {
+                string commentsAsJson = await File.ReadAllTextAsync(filePath);
+                return JsonSerializer.Deserialize<List<Comment>>(commentsAsJson) ?? new List<Comment>();
+            }
+            catch (FileNotFoundException)
+            {
+                Console.WriteLine("File not found. Creating a new one.");
+                return new List<Comment>(); 
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Console.WriteLine($"Unauthorized access: {ex.Message}");
+                throw;
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"Failed to deserialize JSON: {ex.Message}");
+                throw;
+            }
         }
-        catch (UnauthorizedAccessException ex)
+
+
+        private async Task SaveAsync(List<Comment> comments)
         {
-            Console.WriteLine($"Unauthorized access: {ex.Message}");
-            throw;
-        }
-        catch (IOException ex)
-        {
-            Console.WriteLine($"IO error during save: {ex.Message}");
-            throw;
+            try
+            {
+                string commentsAsJson = JsonSerializer.Serialize(comments);
+                await File.WriteAllTextAsync(filePath, commentsAsJson);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Console.WriteLine($"Unauthorized access: {ex.Message}");
+                throw;
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"IO error during save: {ex.Message}");
+                throw;
+            }
         }
     }
 }
