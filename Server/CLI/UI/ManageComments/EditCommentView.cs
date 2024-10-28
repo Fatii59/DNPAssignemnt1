@@ -1,15 +1,16 @@
 ﻿using Entities;
 using RepostitoryContracts;
+using Services;
 
 namespace CLI.UI.ManageComments;
 
 public class EditCommentView
 {
-    private readonly ICommentRepository _commentRepository;
+    private readonly  ICommentService _commentService;
 
-    public EditCommentView(ICommentRepository commentRepository)
+    public EditCommentView( ICommentService commentService)
     {
-        _commentRepository = commentRepository;
+        _commentService=commentService;
     }
 
     public async Task DisplayAsync()
@@ -24,7 +25,7 @@ public class EditCommentView
         try
         {
             
-            var comment = await _commentRepository.GetSingleAsync(commentId);
+            var comment = await _commentService.GetCommentByIdAsync(commentId);
             if (comment == null)
             {
                 Console.WriteLine($"Comment with ID {commentId} not found.");
@@ -40,7 +41,7 @@ public class EditCommentView
             if (!string.IsNullOrEmpty(newBody)) comment.Body = newBody;
 
             
-            await _commentRepository.UpdateAsync(comment);
+            await _commentService.UpdateCommentAsync(comment);
             Console.WriteLine("Comment updated successfully.");
         }
         catch (Exception ex)

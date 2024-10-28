@@ -1,14 +1,15 @@
-﻿using RepostitoryContracts;
+﻿
+using Services;
 
 namespace CLI.UI.ManagePosts;
 
 public class DeletePostView
 {
-    private readonly IPostRepository _postRepository;
+    private readonly IPostService _postService;
 
-    public DeletePostView(IPostRepository postRepository)
+    public DeletePostView(IPostService postService)
     {
-        _postRepository = postRepository;
+        _postService = postService;
     }
 
     public async Task DisplayAsync()
@@ -23,7 +24,7 @@ public class DeletePostView
         try
         {
             
-            var post = await _postRepository.GetSingleAsync(postId);
+            var post = await _postService.GetPostByIdAsync(postId);
             if (post == null)
             {
                 Console.WriteLine($"Post with ID {postId} not found.");
@@ -35,7 +36,7 @@ public class DeletePostView
             var confirmation = Console.ReadLine();
             if (confirmation?.ToLower() == "y")
             {
-                await _postRepository.DeleteAsync(postId);
+                await _postService.DeletePostAsync(postId);
                 Console.WriteLine("Post deleted successfully.");
             }
             else

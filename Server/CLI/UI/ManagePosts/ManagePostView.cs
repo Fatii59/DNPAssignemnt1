@@ -1,15 +1,17 @@
 ﻿using System.Threading.Tasks;
 using RepostitoryContracts;
+using Services;
+
 namespace CLI.UI.ManagePosts;
 
 public class ManagePostView
 {
-    private readonly IPostRepository _postRepository;
+    private readonly IPostService _postService;
 
 
-    public ManagePostView(IPostRepository postRepository)
+    public ManagePostView(IPostService postService)
     {
-        _postRepository = postRepository;
+        _postService = postService;
     }
 
     
@@ -49,31 +51,31 @@ public class ManagePostView
     
     private async Task ShowEditPostViewAsync()
     {
-        var editPostView = new EditPostView(_postRepository);
+        var editPostView = new EditPostView(_postService);
         await editPostView.DisplayAsync();
     }
     
     private async Task ShowDeletePostViewAsync()
     {
-        var deletePostView = new DeletePostView(_postRepository);
+        var deletePostView = new DeletePostView(_postService);
         await deletePostView.DisplayAsync();
     }
     
     private async Task ShowSinglePostViewAsync()
     {
-        var singlePostView = new SinglePostView(_postRepository);
+        var singlePostView = new SinglePostView(_postService);
         await singlePostView.DisplayAsync();
     }
     
     private async Task ShowCreatePostViewAsync()
     {
-        var createPostView = new CreatePostView(_postRepository);
+        var createPostView = new CreatePostView(_postService);
         await createPostView.DisplayAsync();
     }
 
     private async Task ShowListPostsViewAsync()
     {
-        var listPostView = new ListPostsView(_postRepository);
+        var listPostView = new ListPostsView(_postService);
         await listPostView.DisplayAsync();
     }
 

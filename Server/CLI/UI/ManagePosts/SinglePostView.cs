@@ -1,18 +1,15 @@
 ﻿
-
-using System;
-using System.Threading.Tasks;
-using RepostitoryContracts;
+using Services;
 
 namespace CLI.UI.ManagePosts;
 
     public class SinglePostView
     {
-        private readonly IPostRepository _postRepository;
+        private readonly IPostService _postService;
 
-        public SinglePostView(IPostRepository postRepository)
+        public SinglePostView(IPostService postService)
         {
-            _postRepository = postRepository;
+            _postService=postService;
         }
 
         
@@ -31,7 +28,7 @@ namespace CLI.UI.ManagePosts;
      
             try
             {
-                var post = await _postRepository.GetSingleAsync(postId);
+                var post = await _postService.GetPostByIdAsync(postId);
                
                 Console.WriteLine($"Post ID: {post.Id}");
                 Console.WriteLine($"Title: {post.Title}");

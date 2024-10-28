@@ -1,14 +1,15 @@
 ﻿using RepostitoryContracts;
+using Services;
 
 namespace CLI.UI.ManageComments;
 
 public class DeleteCommentView
 {
-    private readonly ICommentRepository _commentRepository;
+    private readonly  ICommentService _commentService;
 
-    public DeleteCommentView(ICommentRepository commentRepository)
+    public DeleteCommentView( ICommentService commentService)
     {
-        _commentRepository = commentRepository;
+        _commentService=commentService;
     }
 
     public async Task DisplayAsync()
@@ -18,7 +19,7 @@ public class DeleteCommentView
 
         try
         {
-            await _commentRepository.DeleteAsync(id);
+            await _commentService.DeleteCommentAsync(id);
             Console.WriteLine("Comment deleted successfully.");
         }
         catch (Exception ex)

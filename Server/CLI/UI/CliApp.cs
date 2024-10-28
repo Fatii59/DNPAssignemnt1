@@ -1,5 +1,4 @@
-﻿using RepostitoryContracts;
-using System.Threading.Tasks;
+﻿
 using CLI.UI.ManageComments;
 using CLI.UI.ManagePosts;
 using CLI.UI.ManageUsers;
@@ -10,14 +9,14 @@ namespace CLI.UI;
 public class CliApp
 {
     private readonly IUserService _userService;
-    private readonly ICommentRepository _commentRepository;
-    private readonly IPostRepository _postRepository;
+    private readonly ICommentService _commentService;
+    private readonly IPostService _postService; 
 
-    public CliApp(IUserService userService, ICommentRepository commentRepository, IPostRepository postRepository)
+    public CliApp(IUserService userService, ICommentService commentService,  IPostService postService)
     {
         _userService = userService;
-        _commentRepository = commentRepository;
-        _postRepository = postRepository;
+        _commentService = commentService;
+        _postService = postService;
     }
 
     public async Task StartAsync()
@@ -64,13 +63,13 @@ public class CliApp
 
     private async Task DisplayPostManagementMenuAsync()
     {
-        var managePostsView = new ManagePostView(_postRepository);
+        var managePostsView = new ManagePostView(_postService);
         await managePostsView.DisplayMenuAsync();
     }
 
     private async Task DisplayCommentManagementMenuAsync()
     {
-        var manageCommentsView = new ManageCommentView(_commentRepository);
+        var manageCommentsView = new ManageCommentView(_commentService);
         await manageCommentsView.DisplayMenuAsync();
     }
 }

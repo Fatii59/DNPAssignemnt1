@@ -1,16 +1,16 @@
 ﻿using Entities;
-using RepostitoryContracts;
+using Services;
 
 namespace CLI.UI.ManagePosts;
 
 public class EditPostView
 {
   
-        private readonly IPostRepository _postRepository;
+        private readonly IPostService _postService;
 
-        public EditPostView(IPostRepository postRepository)
+        public EditPostView(IPostService postService)
         {
-            _postRepository = postRepository;
+            _postService=postService;
         }
 
         public async Task DisplayAsync()
@@ -25,7 +25,7 @@ public class EditPostView
             try
             {
                 
-                var post = await _postRepository.GetSingleAsync(postId);
+                var post = await _postService.GetPostByIdAsync(postId);
                 if (post == null)
                 {
                     Console.WriteLine($"Post with ID {postId} not found.");
@@ -45,7 +45,7 @@ public class EditPostView
                 if (!string.IsNullOrEmpty(newBody)) post.Body = newBody;
 
                
-                await _postRepository.UpdateAsync(post);
+                await _postService.UpdatePostAsync(post);
                 Console.WriteLine("Post updated successfully.");
             }
             catch (Exception ex)

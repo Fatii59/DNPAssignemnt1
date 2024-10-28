@@ -1,41 +1,42 @@
-﻿using Entities;
-using RepostitoryContracts;
+﻿
+using Entities;
+using Services;
 
-namespace CLI.UI.ManageComments;
-
-public class ListCommentsView
+namespace CLI.UI.ManageComments
 {
-    private readonly ICommentRepository _commentRepository;
-
-    public ListCommentsView(ICommentRepository commentRepository)
+    public class ListCommentsView
     {
-        _commentRepository = commentRepository;
-    }
+        private readonly ICommentService _commentService;
 
-    public async Task DisplayAsync()
-    {
-        Console.WriteLine("=== List of Comments ===");
-
-        var comments = _commentRepository.GetMany().ToList();
-
-        if (!comments.Any())
+        public ListCommentsView(ICommentService commentService)
         {
-            Console.WriteLine("No comments available.");
-            return;
+            _commentService = commentService;
         }
 
-        foreach (var comment in comments)
+        public async Task DisplayAsync()
         {
-            DisplayComment(comment);
-        }
-    }
+            Console.WriteLine("=== List of Comments ===");
 
-    private void DisplayComment(Comment comment)
-    {
-        Console.WriteLine($"Comment ID: {comment.Id}");
-        Console.WriteLine($"Body: {comment.Body}");
-        Console.WriteLine($"Post ID: {comment.PostId}");
-        Console.WriteLine($"User ID: {comment.UserId}");
-        Console.WriteLine("----------------------------");
+            var comments = await _commentService.GetAllCommentsAsync();
+            if (!comments.Any())
+            {
+                Console.WriteLine("No comments available.");
+                return;
+            }
+
+            foreach (var comment in comments)
+            {
+                DisplayComment(comment);
+            }
+        }
+
+        private void DisplayComment(Comment comment)
+        {
+            Console.WriteLine($"Comment ID: {comment.Id}");
+            Console.WriteLine($"Body: {comment.Body}");
+            Console.WriteLine($"Post ID: {comment.PostId}");
+            Console.WriteLine($"User ID: {comment.UserId}");
+            Console.WriteLine("----------------------------");
+        }
     }
 }

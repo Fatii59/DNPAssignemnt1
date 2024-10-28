@@ -1,15 +1,16 @@
 ﻿using Entities;
 using RepostitoryContracts;
+using Services;
 
 namespace CLI.UI.ManageComments;
 
 public class SingleCommentView
 {
-    private readonly ICommentRepository _commentRepository;
+    private readonly  ICommentService _commentService;
 
-    public SingleCommentView(ICommentRepository commentRepository)
+    public SingleCommentView(ICommentService commentService)
     {
-        _commentRepository = commentRepository;
+        _commentService=commentService;
     }
 
     public async Task DisplayAsync()
@@ -19,7 +20,7 @@ public class SingleCommentView
 
         try
         {
-            var comment = await _commentRepository.GetSingleAsync(id);
+            var comment = await _commentService.GetCommentByIdAsync(id);
             DisplayComment(comment);
         }
         catch (Exception ex)

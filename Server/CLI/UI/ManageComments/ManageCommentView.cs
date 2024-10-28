@@ -1,15 +1,16 @@
 ﻿using RepostitoryContracts;
+using Services;
 
 namespace CLI.UI.ManageComments;
 
 public class ManageCommentView
 {
  
-        private readonly ICommentRepository _commentRepository;
+        private readonly ICommentService _commentService;
 
-        public ManageCommentView(ICommentRepository commentRepository)
+        public ManageCommentView(ICommentService commentService)
         {
-            _commentRepository = commentRepository;
+            _commentService = commentService;
         }
 
         public async Task DisplayMenuAsync()
@@ -48,30 +49,30 @@ public class ManageCommentView
 
         private async Task ShowEditCommentViewAsync()
         {
-            var editCommentView = new EditCommentView(_commentRepository);
+            var editCommentView = new EditCommentView(_commentService);
             await editCommentView.DisplayAsync();
         }
         private async Task ShowCreateCommentViewAsync()
         {
-            var createCommentView = new CreateCommentView(_commentRepository);
+            var createCommentView = new CreateCommentView(_commentService);
             await createCommentView.DisplayAsync();
         }
 
         private async Task ShowListCommentsViewAsync()
         {
-            var listCommentsView = new ListCommentsView(_commentRepository);
+            var listCommentsView = new ListCommentsView(_commentService);
             await listCommentsView.DisplayAsync();
         }
 
         private async Task ShowSingleCommentViewAsync()
         {
-            var singleCommentView = new SingleCommentView(_commentRepository);
+            var singleCommentView = new SingleCommentView(_commentService);
             await singleCommentView.DisplayAsync();
         }
 
         private async Task ShowDeleteCommentViewAsync()
         {
-            var deleteCommentView = new DeleteCommentView(_commentRepository);
+            var deleteCommentView = new DeleteCommentView(_commentService);
             await deleteCommentView.DisplayAsync();
         }
     }
