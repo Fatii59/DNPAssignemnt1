@@ -1,5 +1,6 @@
 using FileRepositories;
 using RepostitoryContracts;
+using Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,9 +11,16 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+//Add repositories
 builder.Services.AddScoped<IPostRepository, PostFileRepository>();
 builder.Services.AddScoped<IUserRepository, UserFileRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentFileRepository>();
+
+//Add service layer
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+
 
 var app = builder.Build();
 

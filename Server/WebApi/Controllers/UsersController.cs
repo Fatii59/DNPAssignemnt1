@@ -1,7 +1,6 @@
 ﻿using DTOs;
-using Entities;
 using Microsoft.AspNetCore.Mvc;
-using RepostitoryContracts;
+using Services;
 
 namespace WebApi.Controllers;
 
@@ -9,65 +8,63 @@ namespace WebApi.Controllers;
 [Route("[controller]")]
 public class UsersController : ControllerBase
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUserService _userService;
 
-    public UsersController(IUserRepository userRepository)
+    public UsersController(IUserService userService)
     {
-        _userRepository = userRepository;
+        _userService = userService;
     }
 
-    // POST: /Users
     [HttpPost]
-    public async Task<ActionResult<UserDTO>> AddUser([FromBody] CreateUserDTO request) // Fixed DTO naming
+    public async Task<ActionResult<UserDTO>> AddUser([FromBody] CreateUserDTO request)
     {
-        // Await the async method for user name availability check
-        await VerifyUserNameIsAvailableAsync(request.UserName);
-
-        User user = new(request.UserName, request.Password);
-        User created = await _userRepository.AddAsync(user);
-
-        UserDTO dto = new UserDTO
+        try
         {
-            Id = created.Id,
-            UserName = created.UserName
-        };
+            await VerifyUserNameIsAvailableAsync(request.UserName);
 
-        return Created($"/Users/{dto.Id}", dto);
+            var created = await _userService.CreateUserAsync(request.UserName, request.Password);
+
+            var dto = new UserDTO
+            {
+                Id = created.Id,
+                UserName = created.UserName
+            };
+
+            return Created($"/Users/{dto.Id}", dto);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
-    // GET: /Users
     [HttpGet]
     public async Task<ActionResult<IEnumerable<UserDTO>>> GetMany([FromQuery] string? userName = null)
     {
-        var users = _userRepository.GetMany();
+        var users = await _userService.GetAllUsersAsync();
 
-        // Apply the filter if a username query is provided
         if (!string.IsNullOrEmpty(userName))
         {
-            users = users.Where(u => u.UserName.Contains(userName));
+            users = users.Where(u => u.UserName.Contains(userName)).ToList();
         }
 
-        // Project to UserDTOs asynchronously
-        var userDtos = await Task.Run(() => users.Select(user => new UserDTO
+        var userDtos = users.Select(user => new UserDTO
         {
             Id = user.Id,
             UserName = user.UserName
-        }).ToList());
+        }).ToList();
 
         return Ok(userDtos);
     }
 
-    // Verify asynchronously if the username is available
     private async Task VerifyUserNameIsAvailableAsync(string userName)
     {
-        var existingUser = await Task.Run(() => _userRepository.GetMany()
-                                   .FirstOrDefault(u => u.UserName == userName));
+        var existingUser = (await _userService.GetAllUsersAsync())
+            .FirstOrDefault(u => u.UserName == userName);
 
         if (existingUser != null)
         {
-            // You can throw a custom exception or return an HTTP response with a 400 status
             throw new InvalidOperationException("Username already exists.");
         }
     }
 }
-

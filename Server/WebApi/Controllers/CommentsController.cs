@@ -1,7 +1,6 @@
 ﻿using DTOs;
-using Entities;
 using Microsoft.AspNetCore.Mvc;
-using RepostitoryContracts;
+using Services;
 
 namespace WebApi.Controllers;
 
@@ -9,116 +8,85 @@ namespace WebApi.Controllers;
 [Route("api/[controller]")]
 public class CommentsController : ControllerBase
 {
-    private readonly ICommentRepository _commentRepository;
+    private readonly ICommentService _commentService;
 
-    public CommentsController(ICommentRepository commentRepository)
+    public CommentsController(ICommentService commentService)
     {
-        _commentRepository = commentRepository;
+        _commentService = commentService;
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateComment(CreateCommentDTO dto)
     {
-        var comment = new Comment
-        {
-            Body = dto.Body,
-            PostId = dto.PostId,
-            UserId = dto.UserId
-        };
-
-        var createdComment = await _commentRepository.AddAsync(comment);
+        var createdComment = await _commentService.CreateCommentAsync(dto.Body, dto.PostId, dto.UserId);
         return CreatedAtAction(nameof(GetSingleComment), new { id = createdComment.Id }, createdComment);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateComment(int id, UpdateCommentDTO dto)
     {
-        var comment = await _commentRepository.GetSingleAsync(id);
-        if (comment == null)
+        var result = await _commentService.GetCommentByIdAsync(id);
+        if (result == null)
         {
             return NotFound();
         }
 
-        comment.Body = dto.Body;
-        await _commentRepository.UpdateAsync(comment);
+        result.Body = dto.Body;
+        await _commentService.UpdateCommentAsync(result);
         return NoContent();
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<CommentDTO>> GetSingleComment(int id)
     {
-        try
+        var comment = await _commentService.GetCommentByIdAsync(id);
+        if (comment == null)
         {
-            // Call the repository to get the comment
-            var comment = await _commentRepository.GetSingleAsync(id);
-
-            // Check if the comment was found
-            if (comment == null)
-            {
-                return NotFound($"Comment with ID {id} not found.");
-            }
-
-            // Map the Comment to CommentDTO
-            var commentDto = new CommentDTO
-            {
-                Id = comment.Id,
-                Body = comment.Body,
-                PostId = comment.PostId,
-                UserId = comment.UserId
-            };
-
-            return Ok(commentDto);
+            return NotFound($"Comment with ID {id} not found.");
         }
-        catch (Exception ex)
+
+        var commentDto = new CommentDTO
         {
-            Console.WriteLine($"Error retrieving comment: {ex.Message}");
-            return StatusCode(500, "An error occurred while retrieving the comment.");
-        }
+            Id = comment.Id,
+            Body = comment.Body,
+            PostId = comment.PostId,
+            UserId = comment.UserId
+        };
+
+        return Ok(commentDto);
     }
 
     [HttpGet]
     public async Task<ActionResult<List<CommentDTO>>> GetManyComments()
     {
-        try
+        var comments = await _commentService.GetAllCommentsAsync();
+
+        if (!comments.Any())
         {
-            // Call the asynchronous method to retrieve comments
-            var comments = await _commentRepository.GetManyAsync();
-
-            if (!comments.Any())
-            {
-                return NotFound("No comments found.");
-            }
-
-            // Project comments into DTOs
-            var commentDtos = comments.Select(comment => new CommentDTO
-            {
-                Id = comment.Id,
-                Body = comment.Body,
-                PostId = comment.PostId,
-                UserId = comment.UserId
-            }).ToList(); // Materialize the query here
-
-            return Ok(commentDtos);
+            return NotFound("No comments found.");
         }
-        catch (Exception ex)
+
+        var commentDtos = comments.Select(comment => new CommentDTO
         {
-            Console.WriteLine($"Error retrieving comments: {ex.Message}");
-            return StatusCode(500, "An error occurred while retrieving the comments.");
-        }
+            Id = comment.Id,
+            Body = comment.Body,
+            PostId = comment.PostId,
+            UserId = comment.UserId
+        }).ToList();
+
+        return Ok(commentDtos);
     }
-
-
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteComment(int id)
     {
-        var comment = await _commentRepository.GetSingleAsync(id);
+        var comment = await _commentService.GetCommentByIdAsync(id);
         if (comment == null)
         {
             return NotFound();
         }
 
-        await _commentRepository.DeleteAsync(id);
+        await _commentService.DeleteCommentAsync(id);
         return NoContent();
     }
 }
