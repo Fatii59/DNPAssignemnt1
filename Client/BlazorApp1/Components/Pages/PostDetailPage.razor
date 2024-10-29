@@ -1,0 +1,76 @@
+﻿@page "/post/{postId:int}"
+@using BlazorApp1.Services
+@using DTOs
+@inject IPostService PostService
+@inject ICommentService CommentService
+
+<h3>@_post?.Title</h3>
+<p>@_post?.Body</p>
+<p><strong>Posted by:</strong> @_post?.UserName</p>
+
+<h4>Comments</h4>
+@if (_comments.Any())
+{
+    <ul>
+        @foreach (var comment in _comments)
+        {
+            <li>@comment.Body</li>
+        }
+    </ul>
+}
+else
+{
+    <p>No comments yet.</p>
+}
+
+<h4>Add a Comment</h4>
+<EditForm Model="@_newComment" OnValidSubmit="HandleCommentSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <InputTextArea @bind-Value="_newComment.Body" placeholder="Add your comment" />
+    <button type="submit">Add Comment</button>
+</EditForm>
+
+@code {
+    // Route parameter
+    [Parameter] public int PostId { get; set; }
+
+    // Post details (nullable as it’s loaded async)
+    private PostDTO? _post;
+
+    // Comments for the post, initialized to an empty list
+    private List<CommentDTO> _comments = new List<CommentDTO>();
+
+    // New comment form data with default PostId and UserId
+    private  readonly CreateCommentDTO _newComment = new CreateCommentDTO { PostId = 0, UserId = 1 };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _post = await PostService.GetPostByIdAsync(PostId);
+            _comments = (await CommentService.GetCommentsByPostIdAsync(PostId)).ToList(); // Fetch comments by PostId only
+            _newComment.PostId = PostId; // Ensure the new comment is tied to this PostId
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching post or comments: {ex.Message}");
+        }
+    }
+
+
+    private async Task HandleCommentSubmit()
+    {
+        try
+        {
+            var createdComment = await CommentService.CreateCommentAsync(_newComment);
+            _comments.Add(createdComment);
+            _newComment.Body = string.Empty; // Clear the comment form
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error adding comment: {ex.Message}");
+        }
+    }
+}

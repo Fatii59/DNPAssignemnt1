@@ -1,0 +1,94 @@
+﻿@page "/users"
+@using DTOs
+@using BlazorApp1.Services
+@inject IUserService UserService
+
+<h3>Create User</h3>
+
+@if (_isLoading)
+{
+    <p>Loading users...</p>
+}
+else
+{
+    <EditForm Model="@_newUser" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div>
+            <label for="username">Username:</label>
+            <InputText @bind-Value="_newUser.UserName" id="username" placeholder="Enter username" />
+        </div>
+        <div>
+            <label for="password">Password:</label>
+            <InputText @bind-Value="_newUser.Password" id="password" type="password" placeholder="Enter password" />
+        </div>
+
+        <button type="submit">Create User</button>
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <p style="color: red">@_errorMessage</p>
+    }
+
+    @if (_users.Any())
+    {
+        <h3>Users List</h3>
+        <ul>
+            @foreach (var user in _users)
+            {
+                <li>@user.UserName</li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p>No users available.</p>
+    }
+
+}
+
+@code {
+    // Form data for new user
+    private CreateUserDTO _newUser = new CreateUserDTO();
+    
+    // List to hold fetched users
+    private List<UserDTO> _users = new List<UserDTO>();
+
+    // Loading and error indicators
+    private bool _isLoading = true;
+    private string _errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Fetch users from API on page load
+            _users = (await UserService.GetUsersAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error fetching users: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            var createdUser = await UserService.AddUserAsync(_newUser);
+            _users.Add(createdUser); // Add new user to the list
+            _newUser = new CreateUserDTO(); // Clear form after submission
+            _errorMessage = ""; // Clear any previous errors
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error creating user: {ex.Message}";
+        }
+    }
+}

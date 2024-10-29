@@ -1,0 +1,65 @@
+﻿@page "/posts"
+@using BlazorApp1.Services
+@using DTOs
+@inject IPostService PostService
+
+<h3>Create Post</h3>
+<EditForm Model="@_newPost" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <InputText @bind-Value="_newPost.Title" placeholder="Title" />
+    <InputTextArea @bind-Value="_newPost.Body" placeholder="Body" />
+    <button type="submit">Create Post</button>
+</EditForm>
+
+@if (_posts.Any())
+{
+    <h3>Posts List</h3>
+    <ul>
+        @foreach (var post in _posts)
+        {
+            <li>
+                <a href="@($"post/{post.Id}")">@post.Title</a> by @post.UserName
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No posts available.</p>
+}
+
+@code {
+    // Form data for new post
+    private CreatePostDTO _newPost = new CreatePostDTO { UserId = 1 }; // Set default user ID
+    
+    // List to hold fetched posts
+    private List<PostDTO> _posts = new List<PostDTO>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _posts = (await PostService.GetPostsAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching posts: {ex.Message}");
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            var createdPost = await PostService.CreatePostAsync(_newPost);
+            _posts.Add(createdPost);
+            _newPost = new CreatePostDTO { UserId = 1 }; // Clear form and reset UserId
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating post: {ex.Message}");
+        }
+    }
+}
