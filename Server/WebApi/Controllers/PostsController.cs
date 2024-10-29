@@ -1,12 +1,11 @@
 ﻿using DTOs;
-
 using Microsoft.AspNetCore.Mvc;
 using Services;
 
 namespace WebApi.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class PostController : ControllerBase
 {
     private readonly IPostService _postService;
@@ -18,6 +17,7 @@ public class PostController : ControllerBase
         _userService = userService;
     }
 
+    // Create a new post
     [HttpPost]
     public async Task<ActionResult<PostDTO>> CreatePost([FromBody] CreatePostDTO request)
     {
@@ -37,23 +37,94 @@ public class PostController : ControllerBase
             UserName = user.UserName
         };
 
-        return Created($"/Posts/{postDto.Id}", postDto);
+        return CreatedAtAction(nameof(GetPostById), new { id = postDto.Id }, postDto);
     }
 
+    // Get all posts
     [HttpGet]
     public async Task<ActionResult<List<PostDTO>>> GetMany()
     {
         var posts = await _postService.GetAllPostsAsync();
-
-        var postDtos = posts.Select(p => new PostDTO
+    
+        // Dictionary to cache user names by user ID
+        var userCache = new Dictionary<int, string>();
+    
+        var postDtos = new List<PostDTO>();
+        foreach (var post in posts)
         {
-            Id = p.Id,
-            Title = p.Title,
-            Body = p.Body,
-            UserId = p.UserId,
-            UserName = "ExampleUser" // Optionally replace with actual user fetching if needed
-        }).ToList();
+            // Check if the user's name is already in the cache
+            if (!userCache.TryGetValue(post.UserId, out var userName))
+            {
+                // If not in cache, fetch from the service and store in the cache
+                var user = await _userService.GetUserByIdAsync(post.UserId);
+                userName = user?.UserName ?? "Unknown";
+                userCache[post.UserId] = userName;
+            }
+
+            postDtos.Add(new PostDTO
+            {
+                Id = post.Id,
+                Title = post.Title,
+                Body = post.Body,
+                UserId = post.UserId,
+                UserName = userName
+            });
+        }
 
         return Ok(postDtos);
+    }
+
+    // Get a single post by ID
+    [HttpGet("{id}")]
+    public async Task<ActionResult<PostDTO>> GetPostById(int id)
+    {
+        var post = await _postService.GetPostByIdAsync(id);
+        if (post == null)
+        {
+            return NotFound($"Post with ID {id} not found.");
+        }
+
+        var user = await _userService.GetUserByIdAsync(post.UserId);
+        var postDto = new PostDTO
+        {
+            Id = post.Id,
+            Title = post.Title,
+            Body = post.Body,
+            UserId = post.UserId,
+            UserName = user?.UserName ?? "Unknown"
+        };
+
+        return Ok(postDto);
+    }
+
+    // Update an existing post
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdatePost(int id, [FromBody] UpdatePostDTO dto)
+    {
+        var post = await _postService.GetPostByIdAsync(id);
+        if (post == null)
+        {
+            return NotFound($"Post with ID {id} not found.");
+        }
+
+        post.Title = dto.Title;
+        post.Body = dto.Body;
+
+        await _postService.UpdatePostAsync(post);
+        return NoContent();
+    }
+
+    // Delete a post by ID
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeletePost(int id)
+    {
+        var post = await _postService.GetPostByIdAsync(id);
+        if (post == null)
+        {
+            return NotFound($"Post with ID {id} not found.");
+        }
+
+        await _postService.DeletePostAsync(id);
+        return NoContent();
     }
 }

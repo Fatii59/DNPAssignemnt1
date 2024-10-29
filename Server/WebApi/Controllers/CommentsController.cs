@@ -57,13 +57,13 @@ public class CommentsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<CommentDTO>>> GetManyComments()
+    public async Task<ActionResult<List<CommentDTO>>> GetManyComments(int? postId = null)
     {
         var comments = await _commentService.GetAllCommentsAsync();
-
-        if (!comments.Any())
+    
+        if (postId.HasValue)
         {
-            return NotFound("No comments found.");
+            comments = comments.Where(c => c.PostId == postId.Value).ToList();
         }
 
         var commentDtos = comments.Select(comment => new CommentDTO
@@ -76,6 +76,7 @@ public class CommentsController : ControllerBase
 
         return Ok(commentDtos);
     }
+
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteComment(int id)

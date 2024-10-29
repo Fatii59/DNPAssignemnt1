@@ -5,7 +5,7 @@ using Services;
 namespace WebApi.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -15,13 +15,12 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
+    // POST: Create a new user
     [HttpPost]
     public async Task<ActionResult<UserDTO>> AddUser([FromBody] CreateUserDTO request)
     {
         try
         {
-            await VerifyUserNameIsAvailableAsync(request.UserName);
-
             var created = await _userService.CreateUserAsync(request.UserName, request.Password);
 
             var dto = new UserDTO
@@ -30,14 +29,15 @@ public class UsersController : ControllerBase
                 UserName = created.UserName
             };
 
-            return Created($"/Users/{dto.Id}", dto);
+            return CreatedAtAction(nameof(GetUserById), new { id = dto.Id }, dto);
         }
-        catch (InvalidOperationException ex)
+        catch (ArgumentException ex)
         {
             return BadRequest(ex.Message);
         }
     }
 
+    // GET: Get all users or filter by username
     [HttpGet]
     public async Task<ActionResult<IEnumerable<UserDTO>>> GetMany([FromQuery] string? userName = null)
     {
@@ -57,14 +57,22 @@ public class UsersController : ControllerBase
         return Ok(userDtos);
     }
 
-    private async Task VerifyUserNameIsAvailableAsync(string userName)
+    // Optional: Get a single user by ID to verify user existence
+    [HttpGet("{id}")]
+    public async Task<ActionResult<UserDTO>> GetUserById(int id)
     {
-        var existingUser = (await _userService.GetAllUsersAsync())
-            .FirstOrDefault(u => u.UserName == userName);
-
-        if (existingUser != null)
+        var user = await _userService.GetUserByIdAsync(id);
+        if (user == null)
         {
-            throw new InvalidOperationException("Username already exists.");
+            return NotFound($"User with ID {id} not found.");
         }
+
+        var userDto = new UserDTO
+        {
+            Id = user.Id,
+            UserName = user.UserName
+        };
+
+        return Ok(userDto);
     }
 }
