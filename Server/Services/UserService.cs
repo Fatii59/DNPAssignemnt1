@@ -20,21 +20,26 @@ public class UserService : IUserService
         return await _userRepository.GetSingleAsync(id);
     }
 
-    public async Task<User> CreateUserAsync(string userName, string password)
+    private async Task ValidateUserCreation(string userName, string password)
     {
         if (string.IsNullOrEmpty(userName))
             throw new ArgumentException("Username cannot be empty.");
-
+    
         if (string.IsNullOrEmpty(password) || password.Length < 6)
             throw new ArgumentException("Password must be at least 6 characters.");
 
-        var existingUsers = _userRepository.GetMany().ToList();
-        if (existingUsers.Any(u => u.UserName == userName))
+        var existingUser = (await GetAllUsersAsync()).FirstOrDefault(u => u.UserName == userName);
+        if (existingUser != null)
             throw new ArgumentException("Username already exists.");
+    }
 
+    public async Task<User> CreateUserAsync(string userName, string password)
+    {
+        await ValidateUserCreation(userName, password);
         var user = new User { UserName = userName, Password = HashPassword(password) };
         return await _userRepository.AddAsync(user);
     }
+
 
     public async Task UpdateUserAsync(User user)
     {
@@ -55,6 +60,8 @@ public class UserService : IUserService
         
         await _userRepository.DeleteAsync(id);
     }
+    
+    
 
   
     private string HashPassword(string password)
