@@ -96,6 +96,32 @@ public class PostController : ControllerBase
 
         return Ok(postDto);
     }
+    
+    [HttpGet("recent")]
+    public async Task<ActionResult<List<PostDTO>>> GetRecentPosts(int count = 5)
+    {
+        var recentPosts = await _postService.GetRecentPostsAsync(count);
+
+        // Map `Post` entities to `PostDTOs`
+        var postDtos = recentPosts.Select(post => new PostDTO
+        {
+            Id = post.Id,
+            Title = post.Title,
+            Body = post.Body,
+            UserId = post.UserId,
+            UserName = post.User?.UserName ?? "Unknown",
+            CommentCount = post.Comments.Count, // Accurate comment count
+            CreatedDate = post.CreatedDate
+        }).ToList();
+
+        return Ok(postDtos);
+    }
+
+
+
+
+
+
 
     // Update an existing post
     [HttpPut("{id}")]

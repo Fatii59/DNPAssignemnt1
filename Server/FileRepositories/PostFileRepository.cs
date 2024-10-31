@@ -31,6 +31,7 @@ public class PostFileRepository : IPostRepository
             var posts = await LoadAsync();
             int maxId = posts.Count > 0 ? posts.Max(p => p.Id) : 0;
             post.Id = maxId + 1;
+            post.CreatedDate = DateTime.UtcNow; // Set CreatedDate only once at creation
             posts.Add(post);
             await SaveAsync(posts);
             return post;
@@ -52,6 +53,7 @@ public class PostFileRepository : IPostRepository
             {
                 existingPost.Title = post.Title;
                 existingPost.Body = post.Body;
+                // Retain the original CreatedDate to avoid overwriting it
                 await SaveAsync(posts);
             }
             else
@@ -106,16 +108,16 @@ public class PostFileRepository : IPostRepository
     public async Task<IQueryable<Post>> GetMany()
     {
         var posts = await LoadAsync(); // Load posts from file
-        return posts.AsQueryable();     // Return as IQueryable
+        return posts.AsQueryable();    // Return as IQueryable
     }
-
 
     private async Task<List<Post>> LoadAsync()
     {
         try
         {
             string postsAsJson = await File.ReadAllTextAsync(filePath);
-            return JsonSerializer.Deserialize<List<Post>>(postsAsJson) ?? new List<Post>();
+            var posts = JsonSerializer.Deserialize<List<Post>>(postsAsJson) ?? new List<Post>();
+            return posts;
         }
         catch (FileNotFoundException)
         {
@@ -138,7 +140,8 @@ public class PostFileRepository : IPostRepository
     {
         try
         {
-            string postsAsJson = JsonSerializer.Serialize(posts);
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            string postsAsJson = JsonSerializer.Serialize(posts, options);
             await File.WriteAllTextAsync(filePath, postsAsJson);
         }
         catch (UnauthorizedAccessException ex)

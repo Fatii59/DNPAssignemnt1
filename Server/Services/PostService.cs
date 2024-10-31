@@ -1,4 +1,5 @@
 ﻿
+
 using Entities;
 using RepostitoryContracts;
 
@@ -8,11 +9,13 @@ public class PostService : IPostService
 {
     private readonly IPostRepository _postRepository;
     private readonly IUserRepository _userRepository;
+    private readonly  ICommentRepository _commentRepository;
 
-    public PostService(IPostRepository postRepository, IUserRepository userRepository)
+    public PostService(IPostRepository postRepository, IUserRepository userRepository, ICommentRepository commentRepository)
     {
         _postRepository = postRepository;
         _userRepository = userRepository;
+        _commentRepository = commentRepository;
     }
 
     public async Task<Post?> GetPostByIdAsync(int id)
@@ -67,4 +70,43 @@ public class PostService : IPostService
         var posts = await _postRepository.GetMany();
         return posts.ToList();
     }
+    
+    public async Task<List<Post>> GetRecentPostsAsync(int count)
+    {
+        // Fetch all posts from the repository
+        var posts = await _postRepository.GetMany();
+
+        // Fetch all users to avoid repetitive calls, mapping them by ID
+        var users = _userRepository.GetMany().ToDictionary(u => u.Id);
+
+        // Fetch all comments and group by PostId for quick access
+        var commentsGroupedByPost = (await _commentRepository.GetManyAsync())
+            .GroupBy(c => c.PostId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        // Order posts by CreatedDate and take the most recent ones
+        var recentPosts = posts.OrderByDescending(p => p.CreatedDate).Take(count).ToList();
+
+        // Populate each post's related data from the fetched users and comments
+        foreach (var post in recentPosts)
+        {
+            if (users.TryGetValue(post.UserId, out var user))
+            {
+                post.User = user;
+            }
+
+            if (commentsGroupedByPost.TryGetValue(post.Id, out var comments))
+            {
+                post.Comments = comments; // Populate actual comments
+            }
+            else
+            {
+                post.Comments = new List<Comment>(); // Empty list if no comments
+            }
+        }
+
+        return recentPosts;
+    }
+
+
 }

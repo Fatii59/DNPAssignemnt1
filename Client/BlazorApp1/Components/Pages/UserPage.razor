@@ -3,92 +3,55 @@
 @using BlazorApp1.Services
 @inject IUserService UserService
 
-<h3>Create User</h3>
+<div class="main-container">
+    <h3>Create User</h3>
 
-@if (_isLoading)
-{
-    <p>Loading users...</p>
-}
-else
-{
-    <EditForm Model="@_newUser" OnValidSubmit="HandleValidSubmit">
+    <EditForm Model="@_newUser" OnValidSubmit="HandleValidSubmit" class="form-container">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        <div>
+        <div class="form-group">
             <label for="username">Username:</label>
-            <InputText @bind-Value="_newUser.UserName" id="username" placeholder="Enter username" />
+            <InputText @bind-Value="_newUser.UserName" id="username" placeholder="Enter username" class="input-field" />
         </div>
-        <div>
+        <div class="form-group">
             <label for="password">Password:</label>
-            <InputText @bind-Value="_newUser.Password" id="password" type="password" placeholder="Enter password" />
+            <InputText @bind-Value="_newUser.Password" id="password" type="password" placeholder="Enter password" class="input-field" />
         </div>
 
-        <button type="submit">Create User</button>
+        <button type="submit" class="submit-button">Create User</button>
     </EditForm>
 
-    @if (!string.IsNullOrEmpty(_errorMessage))
+    @if (!string.IsNullOrEmpty(_successMessage))
     {
-        <p style="color: red">@_errorMessage</p>
+        <p class="success-message">@_successMessage</p>
     }
-
-    @if (_users.Any())
+    else if (!string.IsNullOrEmpty(_errorMessage))
     {
-        <h3>Users List</h3>
-        <ul>
-            @foreach (var user in _users)
-            {
-                <li>@user.UserName</li>
-            }
-        </ul>
+        <p class="error-message">@_errorMessage</p>
     }
-    else
-    {
-        <p>No users available.</p>
-    }
-
-}
+</div>
 
 @code {
-    // Form data for new user
     private CreateUserDTO _newUser = new CreateUserDTO();
-    
-    // List to hold fetched users
-    private List<UserDTO> _users = new List<UserDTO>();
-
-    // Loading and error indicators
-    private bool _isLoading = true;
+    private bool _isLoading = false;
+    private string _successMessage = string.Empty;
     private string _errorMessage = string.Empty;
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            // Fetch users from API on page load
-            _users = (await UserService.GetUsersAsync()).ToList();
-        }
-        catch (Exception ex)
-        {
-            _errorMessage = $"Error fetching users: {ex.Message}";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
 
     private async Task HandleValidSubmit()
     {
         try
         {
             var createdUser = await UserService.AddUserAsync(_newUser);
-            _users.Add(createdUser); // Add new user to the list
             _newUser = new CreateUserDTO(); // Clear form after submission
+            _successMessage = "User created successfully!";
             _errorMessage = ""; // Clear any previous errors
         }
         catch (Exception ex)
         {
             _errorMessage = $"Error creating user: {ex.Message}";
+            _successMessage = ""; // Clear any success message
         }
     }
 }
+

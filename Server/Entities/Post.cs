@@ -8,7 +8,9 @@ public class Post
     public int UserId { get; set; }
     public User User { get; set; }
     public List<Comment> Comments { get; set; }
-
+    
+    // Ensure `CreatedDate` is set only once when a new post is created
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
     public Post(string title, string body, int userId)
     {
@@ -18,8 +20,7 @@ public class Post
         Comments = new List<Comment>();
     }
 
-    
-    public Post()
+    public Post() // Default constructor required for deserialization
     {
         Comments = new List<Comment>();
     }

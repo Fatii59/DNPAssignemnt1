@@ -9,4 +9,5 @@ public interface IPostService
     Task UpdatePostAsync(Post post);
     Task DeletePostAsync(int id);
     Task<List<Post>> GetAllPostsAsync();
+    Task<List<Post>> GetRecentPostsAsync(int count); // New method to get recent posts
 }

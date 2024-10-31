@@ -42,6 +42,13 @@ public class HttpPostService : IPostService
         var post = await response.Content.ReadFromJsonAsync<PostDTO>();
         return post ?? throw new Exception($"Post with ID {id} not found");
     }
+    
+    public async Task<IEnumerable<PostDTO>> GetRecentPostsAsync(int count)
+    {
+        var posts = await _client.GetFromJsonAsync<IEnumerable<PostDTO>>($"api/Post/recent?count={count}");
+        return posts ?? Array.Empty<PostDTO>();
+    }
+
 
     public async Task UpdatePostAsync(int id, UpdatePostDTO request)
     {

@@ -3,63 +3,52 @@
 @using DTOs
 @inject IPostService PostService
 
-<h3>Create Post</h3>
-<EditForm Model="@_newPost" OnValidSubmit="HandleValidSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<div class="create-post-container">
+    <h3>Create Post</h3>
+    <EditForm Model="@_newPost" OnValidSubmit="HandleValidSubmit" class="post-form">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
 
-    <InputText @bind-Value="_newPost.Title" placeholder="Title" />
-    <InputTextArea @bind-Value="_newPost.Body" placeholder="Body" />
-    <button type="submit">Create Post</button>
-</EditForm>
+        <div class="input-group">
+            <label for="title">Title*</label>
+            <InputText @bind-Value="_newPost.Title" id="title" maxlength="300" placeholder="Enter your title" class="input-field title-input" />
+        </div>
+        <div class="input-group">
+            <label for="body">Body</label>
+            <InputTextArea @bind-Value="_newPost.Body" id="body" placeholder="Enter the body of your post" class="input-field body-input" />
+        </div>
+        
+        <button type="submit" class="submit-button">Create Post</button>
+    </EditForm>
 
-@if (_posts.Any())
-{
-    <h3>Posts List</h3>
-    <ul>
-        @foreach (var post in _posts)
-        {
-            <li>
-                <a href="@($"post/{post.Id}")">@post.Title</a> by @post.UserName
-            </li>
-        }
-    </ul>
-}
-else
-{
-    <p>No posts available.</p>
-}
+    @if (!string.IsNullOrEmpty(_successMessage))
+    {
+        <p class="success-message">@_successMessage</p>
+    }
+    else if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <p class="error-message">@_errorMessage</p>
+    }
+</div>
 
 @code {
-    // Form data for new post
-    private CreatePostDTO _newPost = new CreatePostDTO { UserId = 1 }; // Set default user ID
-    
-    // List to hold fetched posts
-    private List<PostDTO> _posts = new List<PostDTO>();
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            _posts = (await PostService.GetPostsAsync()).ToList();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error fetching posts: {ex.Message}");
-        }
-    }
+    private CreatePostDTO _newPost = new CreatePostDTO { UserId = 1 };
+    private string _successMessage = string.Empty;
+    private string _errorMessage = string.Empty;
 
     private async Task HandleValidSubmit()
     {
         try
         {
             var createdPost = await PostService.CreatePostAsync(_newPost);
-            _posts.Add(createdPost);
-            _newPost = new CreatePostDTO { UserId = 1 }; // Clear form and reset UserId
+            _newPost = new CreatePostDTO { UserId = 1 }; // Reset form after submission
+            _successMessage = "Post created successfully!";
+            _errorMessage = ""; // Clear any previous errors
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error creating post: {ex.Message}");
+            _errorMessage = $"Error creating post: {ex.Message}";
+            _successMessage = ""; // Clear any success message
         }
     }
 }

@@ -1,0 +1,358 @@
+
+html, body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: var(--off-white); /* Light background color */
+    color: var(--dark-green); /* Main text color */
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --dark-green: #4a5339; /* Dark green color */
+    --brown: #8a5c3d;      /* Brown color */
+    --light-brown: #c5a76e; /* Light brown color */
+    --sage: #8b8b75;       /* Sage green color */
+    --off-white: #f2f1ed;  /* Off-white color */
+    --beige: #eae0d5;      /* Beige color */
+}
+
+
+/* Main container for the forum app */
+.forum-app {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: var(--beige);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Title styles */
+header h1 {
+    color: var(--brown);
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+header p {
+    color: var(--sage);
+    text-align: center;
+}
+
+/* Recent Posts section */
+.recent-posts {
+    background-color: var(--off-white);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.recent-posts h2 {
+    color: var(--brown);
+    font-size: 1.5rem;
+    border-bottom: 1px solid var(--sage);
+    padding-bottom: 10px;
+}
+
+.recent-posts ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.recent-posts li {
+    margin: 10px 0;
+}
+
+.recent-posts a {
+    color: var(--dark-green);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.recent-posts a:hover {
+    color: var(--brown);
+    text-decoration: underline;
+}
+
+/* Comment count and date style */
+.recent-posts small {
+    color: var(--sage);
+    font-size: 0.9rem;
+}
+
+button, .btn-primary {
+    color: #fff;
+    background-color: var(--brown);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover, .btn-primary:hover {
+    background-color: var(--dark-green);
+}
+
+input[type="text"], textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border: 1px solid var(--sage);
+    border-radius: 5px;
+}
+
+input[type="text"]:focus, textarea:focus {
+    border-color: var(--dark-green);
+    outline: none;
+    box-shadow: 0 0 5px rgba(74, 83, 57, 0.5); /* Subtle shadow effect */
+}
+
+.navbar-logo {
+    height: 24px; /* Adjust height slightly larger than the text */
+    width: auto; /* Maintain aspect ratio */
+    margin-right: 8px; /* Space between logo and text */
+    vertical-align: middle; /* Align logo with text */
+}
+
+.sidebar, .nav-menu {
+    background: #454c25 !important;
+    color: #fff !important;
+}
+
+.sidebar .nav-link, .nav-menu .nav-link {
+    color: #e0e0e0 !important;
+}
+
+.sidebar .nav-link:hover, .nav-menu .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+}
+
+/* Centered form container */
+.form-container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    display: block;
+}
+
+.form-field input, .form-field input[type="text"], .form-field input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+
+/* Header styling */
+.form-container h3 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: #4a5339; /* Dark green color */
+}
+
+/* Form field styling */
+.form-field {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+/* Label styling */
+.form-field label {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+/* Input styling */
+.form-field input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Submit button styling */
+.submit-btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    color: #fff;
+    background-color: #8a5c3d; /* Brown color */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.submit-btn:hover {
+    background-color: #4a5339; /* Darker shade on hover */
+}
+
+/* Error message styling */
+.error-message {
+    color: red;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px auto;
+}
+
+.form-container {
+    max-width: 400px;
+    width: 100%;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 10px;
+}
+
+h3 {
+    text-align: center;
+    color: #3b3b3b;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.input-field {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+.submit-button {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--brown);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.submit-button:hover {
+    background-color: #5a3e32;
+}
+
+.success-message {
+    color: green;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.error-message {
+    color: red;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.create-post-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 8px;
+    background-color:  #f2f1ed;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+h3 {
+    text-align: center;
+    color: #333;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.input-field:focus {
+    border-color: #0079d3;
+}
+
+.title-input {
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+.body-input {
+    min-height: 150px;
+    border-radius: 6px;
+}
+
+.submit-button {
+    display: inline-block;
+    background-color: var(--brown);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.submit-button:hover {
+    background-color: var(--dark-green);
+}
+
+.success-message, .error-message {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.success-message {
+    color: green;
+}
+
+.error-message {
+    color: red;
+}
+
+
+
+
