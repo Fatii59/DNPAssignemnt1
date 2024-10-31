@@ -1,1 +1,83 @@
-[{"Id":1,"Title":"New Post Title","Body":"Post content goes here.","UserId":1,"User":null,"Comments":[]},{"Id":2,"Title":"New Post Title","Body":"Post content goes here.","UserId":1,"User":null,"Comments":[]},{"Id":3,"Title":"Sample Post","Body":"This is a sample post body.","UserId":1,"User":null,"Comments":[]},{"Id":4,"Title":"Sample Post","Body":"This is a sample post body.","UserId":1,"User":null,"Comments":[]},{"Id":5,"Title":"yesyes","Body":"lalal","UserId":1,"User":null,"Comments":[]},{"Id":6,"Title":"ll","Body":"kk","UserId":1,"User":null,"Comments":[]},{"Id":7,"Title":"Lets see","Body":"about this","UserId":1,"User":null,"Comments":[]}]
+[
+  {
+    "Id": 1,
+    "Title": "New Post Title",
+    "Body": "Post content goes here.",
+    "UserId": 1,
+    "User": null,
+    "Comments": [],
+    "CreatedDate": "2024-10-31T21:03:43.8783392Z"
+  },
+  {
+    "Id": 2,
+    "Title": "New Post Title",
+    "Body": "Post content goes here.",
+    "UserId": 1,
+    "User": null,
+    "Comments": [],
+    "CreatedDate": "2024-10-31T21:03:43.8783562Z"
+  },
+  {
+    "Id": 3,
+    "Title": "Sample Post",
+    "Body": "This is a sample post body.",
+    "UserId": 1,
+    "User": null,
+    "Comments": [],
+    "CreatedDate": "2024-10-31T21:03:43.878358Z"
+  },
+  {
+    "Id": 4,
+    "Title": "Sample Post",
+    "Body": "This is a sample post body.",
+    "UserId": 1,
+    "User": null,
+    "Comments": [],
+    "CreatedDate": "2024-10-31T21:03:43.8783595Z"
+  },
+  {
+    "Id": 5,
+    "Title": "yesyes",
+    "Body": "lalal",
+    "UserId": 1,
+    "User": null,
+    "Comments": [],
+    "CreatedDate": "2024-10-31T21:03:43.8783606Z"
+  },
+  {
+    "Id": 6,
+    "Title": "ll",
+    "Body": "kk",
+    "UserId": 1,
+    "User": null,
+    "Comments": [],
+    "CreatedDate": "2024-10-31T21:03:43.8783623Z"
+  },
+  {
+    "Id": 7,
+    "Title": "Lets see",
+    "Body": "about this",
+    "UserId": 1,
+    "User": null,
+    "Comments": [],
+    "CreatedDate": "2024-10-31T21:03:43.8783636Z"
+  },
+  {
+    "Id": 8,
+    "Title": "Halloween",
+    "Body": "Happy Halloween!",
+    "UserId": 1,
+    "User": null,
+    "Comments": [],
+    "CreatedDate": "2024-10-31T21:03:43.8800514Z"
+  },
+  {
+    "Id": 9,
+    "Title": "Beetlejuice",
+    "Body": "Beeeetlejuice ",
+    "UserId": 1,
+    "User": null,
+    "Comments": [],
+    "CreatedDate": "2024-10-31T21:13:42.7332303Z"
+  }
+]
