@@ -1,4 +1,6 @@
 ﻿using System.Collections;
+using System.Security.Cryptography;
+using System.Text;
 using Entities;
 using RepostitoryContracts;
 
@@ -36,9 +38,13 @@ public class UserService : IUserService
     public async Task<User> CreateUserAsync(string userName, string password)
     {
         await ValidateUserCreation(userName, password);
-        var user = new User { UserName = userName, Password = HashPassword(password) };
+        var hashedPassword = HashPassword(password);
+        Console.WriteLine($"[CreateUserAsync] Hashed Password: {hashedPassword}"); // Debug log
+    
+        var user = new User { UserName = userName, Password = hashedPassword };
         return await _userRepository.AddAsync(user);
     }
+
 
 
     public async Task UpdateUserAsync(User user)
@@ -62,13 +68,16 @@ public class UserService : IUserService
     }
     
     
-
   
     private string HashPassword(string password)
     {
-     
-        return password;
+        using (var sha256 = System.Security.Cryptography.SHA256.Create())
+        {
+            var bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(bytes);
+        }
     }
+
 
 
     public async Task<List<User>> GetAllUsersAsync()
