@@ -73,39 +73,37 @@ public class PostService : IPostService
     
     public async Task<List<Post>> GetRecentPostsAsync(int count)
     {
-        // Fetch all posts from the repository
-        var posts = await _postRepository.GetMany();
-
-        // Fetch all users to avoid repetitive calls, mapping them by ID
-        var users = _userRepository.GetMany().ToDictionary(u => u.Id);
-
-        // Fetch all comments and group by PostId for quick access
-        var commentsGroupedByPost = (await _commentRepository.GetManyAsync())
-            .GroupBy(c => c.PostId)
-            .ToDictionary(g => g.Key, g => g.ToList());
-
-        // Order posts by CreatedDate and take the most recent ones
-        var recentPosts = posts.OrderByDescending(p => p.CreatedDate).Take(count).ToList();
-
-        // Populate each post's related data from the fetched users and comments
-        foreach (var post in recentPosts)
+        try
         {
-            if (users.TryGetValue(post.UserId, out var user))
+            // Fetch all posts from the repository
+            var posts = await _postRepository.GetMany();
+
+            // Ensure users and comments are fetched properly
+            var users = _userRepository.GetMany().ToDictionary(u => u.Id);
+            var commentsGroupedByPost = (await _commentRepository.GetManyAsync())
+                .GroupBy(c => c.PostId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var recentPosts = posts.OrderByDescending(p => p.CreatedDate).Take(count).ToList();
+
+            foreach (var post in recentPosts)
             {
-                post.User = user;
+                if (users.TryGetValue(post.UserId, out var user))
+                {
+                    post.User = user;
+                }
+
+                post.Comments = commentsGroupedByPost.GetValueOrDefault(post.Id, new List<Comment>());
             }
 
-            if (commentsGroupedByPost.TryGetValue(post.Id, out var comments))
-            {
-                post.Comments = comments; // Populate actual comments
-            }
-            else
-            {
-                post.Comments = new List<Comment>(); // Empty list if no comments
-            }
+            return recentPosts;
         }
-
-        return recentPosts;
+        catch (Exception ex)
+        {
+            // Log the exception
+            Console.WriteLine($"Error in GetRecentPostsAsync: {ex.Message}");
+            throw new Exception("Failed to retrieve recent posts", ex);
+        }
     }
 
 

@@ -2,53 +2,88 @@
 @using BlazorApp1.Services
 @using DTOs
 @inject IPostService PostService
+@inject AuthenticationStateProvider AuthProvider
 
 <div class="create-post-container">
     <h3>Create Post</h3>
-    <EditForm Model="@_newPost" OnValidSubmit="HandleValidSubmit" class="post-form">
+    <EditForm Model="@_newPost" OnValidSubmit="HandleValidSubmit">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
         <div class="input-group">
             <label for="title">Title*</label>
-            <InputText @bind-Value="_newPost.Title" id="title" maxlength="300" placeholder="Enter your title" class="input-field title-input" />
+            <InputText @bind-Value="_newPost.Title" id="title" />
         </div>
         <div class="input-group">
             <label for="body">Body</label>
-            <InputTextArea @bind-Value="_newPost.Body" id="body" placeholder="Enter the body of your post" class="input-field body-input" />
+            <InputTextArea @bind-Value="_newPost.Body" id="body" />
         </div>
-        
-        <button type="submit" class="submit-button">Create Post</button>
-    </EditForm>
 
-    @if (!string.IsNullOrEmpty(_successMessage))
+        <button type="submit">Create Post</button>
+    </EditForm>
+    @if (!string.IsNullOrEmpty(_errorMessage))
     {
-        <p class="success-message">@_successMessage</p>
-    }
-    else if (!string.IsNullOrEmpty(_errorMessage))
-    {
-        <p class="error-message">@_errorMessage</p>
+        <p style="color: red;">@_errorMessage</p>
     }
 </div>
 
 @code {
-    private CreatePostDTO _newPost = new CreatePostDTO { UserId = 1 };
-    private string _successMessage = string.Empty;
+    private CreatePostDTO _newPost = new();
     private string _errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var claims = authState.User.Claims;
+
+        if (!authState.User.Identity?.IsAuthenticated ?? false)
+        {
+            _errorMessage = "You must be logged in to create a post.";
+            Console.WriteLine("User is not authenticated.");
+            return;
+        }
+
+        var userIdClaim = claims.FirstOrDefault(c => c.Type == "Id")?.Value;
+        if (userIdClaim != null)
+        {
+            _newPost.UserId = int.Parse(userIdClaim);
+            Console.WriteLine($"User ID: {_newPost.UserId}");
+        }
+        else
+        {
+            _errorMessage = "User ID is missing. Please log in again.";
+            Console.WriteLine("User ID claim is missing.");
+        }
+    }
+
+
+
+
 
     private async Task HandleValidSubmit()
     {
         try
         {
-            var createdPost = await PostService.CreatePostAsync(_newPost);
-            _newPost = new CreatePostDTO { UserId = 1 }; // Reset form after submission
-            _successMessage = "Post created successfully!";
-            _errorMessage = ""; // Clear any previous errors
+            // Ensure UserId is set before creating the post
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            var userIdClaim = authState.User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
+
+            if (userIdClaim == null)
+            {
+                _errorMessage = "User ID is missing. Please log in again.";
+                return;
+            }
+
+            _newPost.UserId = int.Parse(userIdClaim);
+
+            await PostService.CreatePostAsync(_newPost);
+            _newPost = new(); // Reset form
+            _errorMessage = string.Empty; // Clear error message
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Error creating post: {ex.Message}";
-            _successMessage = ""; // Clear any success message
+            _errorMessage = $"Failed to create post: {ex.Message}";
         }
     }
+
 }

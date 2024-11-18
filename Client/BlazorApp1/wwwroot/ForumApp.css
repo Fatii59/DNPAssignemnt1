@@ -353,6 +353,24 @@ h3 {
     color: red;
 }
 
+/* Navbar Login/Logout Button */
+.login-button, .logout-button {
+    background-color: var(--brown); /* Brown color from theme */
+    color: white;
+    padding: 8px 16px;
+    font-size: 1em;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-left: 15px; /* Adds space if placed next to other navbar items */
+}
+
+.login-button:hover, .logout-button:hover {
+    background-color: var(--dark-green); /* Dark green color from theme */
+}
+
 
 
 

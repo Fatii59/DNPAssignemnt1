@@ -1,71 +1,84 @@
-﻿namespace BlazorApp1.Services;
-
-using System.Net.Http;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Headers;
 using DTOs;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.JSInterop;
 
-
-public class HttpPostService : IPostService
+namespace BlazorApp1.Services
 {
-    private readonly HttpClient _client;
-
-    public HttpPostService(HttpClient client)
+    public class HttpPostService : IPostService
     {
-        _client = client;
-    }
+        private readonly HttpClient _client;
+        private readonly IJSRuntime _jsRuntime; // Add this
 
-    public async Task<PostDTO> CreatePostAsync(CreatePostDTO request)
-    {
-        HttpResponseMessage response = await _client.PostAsJsonAsync("api/Post", request);
-        if (!response.IsSuccessStatusCode)
+        public HttpPostService(HttpClient client, IJSRuntime jsRuntime)
         {
-            throw new Exception("Failed to create post");
+            _client = client;
+            _jsRuntime = jsRuntime; // Assign injected runtime
         }
 
-        // Null-check after deserialization
-        var post = await response.Content.ReadFromJsonAsync<PostDTO>();
-        return post ?? throw new Exception("Post creation returned null data");
-    }
-
-    public async Task<IEnumerable<PostDTO>> GetPostsAsync()
-    {
-        // Null-coalescing to ensure a non-null return value
-        var posts = await _client.GetFromJsonAsync<IEnumerable<PostDTO>>("api/Post");
-        return posts ?? Array.Empty<PostDTO>();
-    }
-
-    public async Task<PostDTO> GetPostByIdAsync(int id)
-    {
-        var response = await _client.GetAsync($"api/Post/{id}");
-        response.EnsureSuccessStatusCode();
-
-        var post = await response.Content.ReadFromJsonAsync<PostDTO>();
-        return post ?? throw new Exception($"Post with ID {id} not found");
-    }
-    
-    public async Task<IEnumerable<PostDTO>> GetRecentPostsAsync(int count)
-    {
-        var posts = await _client.GetFromJsonAsync<IEnumerable<PostDTO>>($"api/Post/recent?count={count}");
-        return posts ?? Array.Empty<PostDTO>();
-    }
-
-
-    public async Task UpdatePostAsync(int id, UpdatePostDTO request)
-    {
-        HttpResponseMessage response = await _client.PutAsJsonAsync($"api/Post/{id}", request);
-        if (!response.IsSuccessStatusCode)
+        public async Task<PostDTO> CreatePostAsync(CreatePostDTO request)
         {
-            throw new Exception($"Failed to update post with ID {id}");
+            // Retrieve JWT token from sessionStorage
+            var authToken = await _jsRuntime.InvokeAsync<string>("sessionStorage.getItem", "authToken");
+            if (!string.IsNullOrEmpty(authToken))
+            {
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                Console.WriteLine($"Authorization Header Set: Bearer {authToken}");
+            }
+            else
+            {
+                Console.WriteLine("Auth token is missing. Throwing exception.");
+                throw new Exception("Authorization token is missing. Please log in.");
+            }
+
+            HttpResponseMessage response = await _client.PostAsJsonAsync("api/Post", request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Failed to create post. Error: {error}");
+                throw new Exception($"Failed to create post: {error}");
+            }
+
+            var post = await response.Content.ReadFromJsonAsync<PostDTO>();
+            return post ?? throw new Exception("Post creation returned null data");
         }
-    }
-
-    public async Task DeletePostAsync(int id)
-    {
-        HttpResponseMessage response = await _client.DeleteAsync($"api/Post/{id}");
-        if (!response.IsSuccessStatusCode)
+        public async Task<IEnumerable<PostDTO>> GetPostsAsync()
         {
-            throw new Exception($"Failed to delete post with ID {id}");
+            var posts = await _client.GetFromJsonAsync<IEnumerable<PostDTO>>("api/Post");
+            return posts ?? Array.Empty<PostDTO>();
+        }
+
+        public async Task<PostDTO> GetPostByIdAsync(int id)
+        {
+            var response = await _client.GetAsync($"api/Post/{id}");
+            response.EnsureSuccessStatusCode();
+
+            var post = await response.Content.ReadFromJsonAsync<PostDTO>();
+            return post ?? throw new Exception($"Post with ID {id} not found");
+        }
+
+        public async Task<IEnumerable<PostDTO>> GetRecentPostsAsync(int count)
+        {
+            var posts = await _client.GetFromJsonAsync<IEnumerable<PostDTO>>($"api/Post/recent?count={count}");
+            return posts ?? Array.Empty<PostDTO>();
+        }
+
+        public async Task UpdatePostAsync(int id, UpdatePostDTO request)
+        {
+            HttpResponseMessage response = await _client.PutAsJsonAsync($"api/Post/{id}", request);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to update post with ID {id}");
+            }
+        }
+
+        public async Task DeletePostAsync(int id)
+        {
+            HttpResponseMessage response = await _client.DeleteAsync($"api/Post/{id}");
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to delete post with ID {id}");
+            }
         }
     }
 }
-

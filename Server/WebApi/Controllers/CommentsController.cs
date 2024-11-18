@@ -1,4 +1,5 @@
 ﻿using DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services;
 
@@ -6,6 +7,7 @@ namespace WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+
 public class CommentsController : ControllerBase
 {
     private readonly ICommentService _commentService;
@@ -15,26 +17,26 @@ public class CommentsController : ControllerBase
         _commentService = commentService;
     }
 
+  
     [HttpPost]
-    public async Task<IActionResult> CreateComment(CreateCommentDTO dto)
+    [Authorize]
+    public async Task<IActionResult> CreateComment([FromBody] CreateCommentDTO request)
     {
-        var createdComment = await _commentService.CreateCommentAsync(dto.Body, dto.PostId, dto.UserId);
+        // Get the user ID from the authenticated user's claims
+        var userIdClaim = User.FindFirst("Id");
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User is not authenticated.");
+        }
+
+        var userId = int.Parse(userIdClaim.Value);
+
+        // Use the userId from the claims instead of the client-supplied ID
+        var createdComment = await _commentService.CreateCommentAsync(request.Body, request.PostId, userId);
+
         return CreatedAtAction(nameof(GetSingleComment), new { id = createdComment.Id }, createdComment);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateComment(int id, UpdateCommentDTO dto)
-    {
-        var result = await _commentService.GetCommentByIdAsync(id);
-        if (result == null)
-        {
-            return NotFound();
-        }
-
-        result.Body = dto.Body;
-        await _commentService.UpdateCommentAsync(result);
-        return NoContent();
-    }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<CommentDTO>> GetSingleComment(int id)

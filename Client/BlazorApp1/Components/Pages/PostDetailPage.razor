@@ -1,76 +1,87 @@
 ﻿@page "/post/{postId:int}"
 @using BlazorApp1.Services
 @using DTOs
-@inject IPostService PostService
 @inject ICommentService CommentService
+@inject IPostService PostService
+@inject AuthenticationStateProvider AuthProvider
 
-<h3>@_post?.Title</h3>
-<p>@_post?.Body</p>
-<p><strong>Posted by:</strong> @_post?.UserName</p>
-
-<h4>Comments</h4>
-@if (_comments.Any())
-{
-    <ul>
-        @foreach (var comment in _comments)
-        {
-            <li>@comment.Body</li>
-        }
-    </ul>
-}
-else
-{
-    <p>No comments yet.</p>
-}
+<h3>@_postTitle</h3>
 
 <h4>Add a Comment</h4>
 <EditForm Model="@_newComment" OnValidSubmit="HandleCommentSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
-    <InputTextArea @bind-Value="_newComment.Body" placeholder="Add your comment" />
-    <button type="submit">Add Comment</button>
+    <InputTextArea @bind-Value="_newComment.Body" placeholder="Add your comment" class="input-field body-input" />
+    <button type="submit" class="submit-button">Add Comment</button>
 </EditForm>
 
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <p class="error-message">@_errorMessage</p>
+}
+@if (!string.IsNullOrEmpty(_successMessage))
+{
+    <p class="success-message">@_successMessage</p>
+}
+
 @code {
-    // Route parameter
-    [Parameter] public int PostId { get; set; }
+    [Parameter] public int PostId { get; set; } // Capture the PostId from the route
 
-    // Post details (nullable as it’s loaded async)
-    private PostDTO? _post;
-
-    // Comments for the post, initialized to an empty list
-    private List<CommentDTO> _comments = new List<CommentDTO>();
-
-    // New comment form data with default PostId and UserId
-    private  readonly CreateCommentDTO _newComment = new CreateCommentDTO { PostId = 0, UserId = 1 };
+    private string _postTitle = "Loading...";
+    private CreateCommentDTO _newComment;
+    private string? _errorMessage;
+    private string? _successMessage;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            _post = await PostService.GetPostByIdAsync(PostId);
-            _comments = (await CommentService.GetCommentsByPostIdAsync(PostId)).ToList(); // Fetch comments by PostId only
-            _newComment.PostId = PostId; // Ensure the new comment is tied to this PostId
+            // Fetch the post details to display the title
+            var post = await PostService.GetPostByIdAsync(PostId);
+            _postTitle = post?.Title ?? "Post not found";
+
+            // Initialize the new comment object with the PostId
+            _newComment = new CreateCommentDTO
+            {
+                PostId = PostId,
+                UserId = await GetLoggedInUserIdAsync() // Fetch the logged-in user's ID
+            };
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error fetching post or comments: {ex.Message}");
+            _postTitle = "Error loading post title";
+            _errorMessage = $"Error initializing: {ex.Message}";
         }
     }
-
 
     private async Task HandleCommentSubmit()
     {
         try
         {
-            var createdComment = await CommentService.CreateCommentAsync(_newComment);
-            _comments.Add(createdComment);
-            _newComment.Body = string.Empty; // Clear the comment form
+            await CommentService.CreateCommentAsync(_newComment);
+            _successMessage = "Comment added successfully!";
+            _newComment.Body = string.Empty; // Clear the form
+            _errorMessage = null; // Clear error message
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error adding comment: {ex.Message}");
+            _errorMessage = $"Error adding comment: {ex.Message}";
+            _successMessage = null; // Clear success message
         }
+    }
+
+    private async Task<int> GetLoggedInUserIdAsync()
+    {
+        // Access the AuthenticationStateProvider to get the logged-in user's ID
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var userIdClaim = authState.User.Claims.FirstOrDefault(c => c.Type == "Id");
+
+        if (userIdClaim == null)
+        {
+            throw new Exception("User is not logged in or user ID claim is missing.");
+        }
+
+        return int.Parse(userIdClaim.Value);
     }
 }

@@ -1,62 +1,98 @@
-﻿using DTOs;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using DTOs;
+using Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using RepostitoryContracts;
-
 
 namespace WebApi.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")] 
+    [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(IUserRepository userRepository)
+        public AuthController(IUserRepository userRepository, IConfiguration configuration)
         {
             _userRepository = userRepository;
+            _configuration = configuration;
         }
 
-        // POST: api/auth/login
         [HttpPost("login")]
-        public async Task<ActionResult<UserDTO>> Login([FromBody] LoginRequest loginRequest)
+        public IActionResult Login([FromBody] LoginRequest loginRequest)
         {
-            var user = await Task.Run(() => 
-                _userRepository.GetMany().FirstOrDefault(u => u.UserName == loginRequest.UserName)
-            );
-
-            if (user == null)
+            try
             {
-                return Unauthorized("User not found.");
+                var user = _userRepository.GetMany().FirstOrDefault(u => u.UserName == loginRequest.UserName);
+
+                if (user == null)
+                {
+                    return Unauthorized("Invalid username.");
+                }
+
+                if (user.Password != HashPassword(loginRequest.Password))
+                {
+                    return Unauthorized("Invalid password.");
+                }
+
+                var userDto = new UserDTO
+                {
+                    Id = user.Id,
+                    UserName = user.UserName
+                };
+
+                // Generate JWT Token
+                var token = GenerateJwtToken(user);
+
+                return Ok(new { Token = token, User = userDto });
             }
-
-            var hashedInputPassword = HashPassword(loginRequest.Password);
-            Console.WriteLine($"[Login] Hashed Input Password: {hashedInputPassword}"); // Debug log
-            Console.WriteLine($"[Login] Stored Password Hash: {user.Password}"); // Debug log
-
-            if (user.Password != hashedInputPassword)
+            catch (Exception ex)
             {
-                return Unauthorized("Invalid password.");
+                Console.WriteLine($"Error in Login: {ex.Message}");
+                return BadRequest("An error occurred while processing your login.");
             }
+        }
 
-            var userDto = new UserDTO
+
+        private string GenerateJwtToken(User user)
+        {
+            var claims = new List<Claim>
             {
-                Id = user.Id,
-                UserName = user.UserName,
-                PostIds = user.Posts.Select(p => p.Id).ToList(),
-                CommentIds = user.Comments.Select(c => c.Id).ToList()
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim("Id", user.Id.ToString())
             };
 
-            return Ok(userDto);
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? throw new InvalidOperationException()));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                _configuration["Jwt:Issuer"],
+                _configuration["Jwt:Issuer"],
+                claims,
+                expires: DateTime.UtcNow.AddHours(1),
+                signingCredentials: creds);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
 
         private string HashPassword(string password)
         {
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new ArgumentNullException(nameof(password), "Password cannot be null or empty.");
+            }
+
             using (var sha256 = System.Security.Cryptography.SHA256.Create())
             {
-                var bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
                 return Convert.ToBase64String(bytes);
             }
         }
+
     }
 }

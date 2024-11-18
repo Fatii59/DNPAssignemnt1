@@ -1,0 +1,53 @@
+@page "/login"
+@using BlazorApp1.Auth
+@using BlazorApp1.Models
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager navMgr
+
+<div class="main-container">
+    <h3>Login</h3>
+
+    <EditForm Model="_loginModel" OnValidSubmit="LoginAsync" class="form-container">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <InputText @bind-Value="_loginModel.UserName" id="username" placeholder="Enter username" class="input-field" />
+            <ValidationMessage For="@(() => _loginModel.UserName)" />
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <InputText @bind-Value="_loginModel.Password" id="password" type="password" placeholder="Enter password" class="input-field" />
+            <ValidationMessage For="@(() => _loginModel.Password)" />
+        </div>
+
+        <button type="submit" class="submit-button">Login</button>
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(_errorLabel))
+    {
+        <p class="error-message">@_errorLabel</p>
+    }
+</div>
+
+@code {
+    private LoginModel _loginModel = new LoginModel();
+    private string _errorLabel;
+
+    private async Task LoginAsync()
+    {
+        try
+        {
+            _errorLabel = string.Empty; // Clear previous error messages
+            await ((SimpleAuthProvider)AuthProvider).LoginAsync(_loginModel.UserName, _loginModel.Password);
+            navMgr.NavigateTo("/");
+        }
+        catch (Exception e)
+        {
+            _errorLabel = $"Login failed: {e.Message}";
+            Console.WriteLine($"Login error: {e.Message}");
+        }
+    }
+
+}

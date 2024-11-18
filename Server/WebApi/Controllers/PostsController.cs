@@ -1,4 +1,5 @@
 ﻿using DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services;
 
@@ -6,6 +7,7 @@ namespace WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+
 public class PostController : ControllerBase
 {
     private readonly IPostService _postService;
@@ -19,26 +21,35 @@ public class PostController : ControllerBase
 
     // Create a new post
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<PostDTO>> CreatePost([FromBody] CreatePostDTO request)
     {
-        var user = await _userService.GetUserByIdAsync(request.UserId);
-        if (user == null)
+        Console.WriteLine($"Authorization Header: {Request.Headers["Authorization"]}");
+
+        var userIdClaim = User.FindFirst("Id");
+        if (userIdClaim == null)
         {
-            return BadRequest("Invalid UserId provided.");
+            return Unauthorized("User is not authenticated.");
         }
 
-        var createdPost = await _postService.CreatePostAsync(request.Title, request.Body, request.UserId);
+        var userId = int.Parse(userIdClaim.Value);
+        Console.WriteLine($"Creating post for User ID: {userId}");
+
+        var createdPost = await _postService.CreatePostAsync(request.Title, request.Body, userId);
 
         var postDto = new PostDTO
         {
             Id = createdPost.Id,
             Title = createdPost.Title,
             Body = createdPost.Body,
-            UserName = user.UserName
+            UserId = userId,
+            UserName = User.Identity?.Name ?? "Unknown"
         };
 
         return CreatedAtAction(nameof(GetPostById), new { id = postDto.Id }, postDto);
     }
+
+
 
     // Get all posts
     [HttpGet]
