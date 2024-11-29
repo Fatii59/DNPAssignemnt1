@@ -1,11 +1,12 @@
-﻿using System.Collections;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using Entities;
-using RepostitoryContracts;
+using Microsoft.EntityFrameworkCore;
 
 namespace Services;
 
+using System.Threading.Tasks;
+using Entities;
+using RepostitoryContracts;
 
 public class UserService : IUserService
 {
@@ -18,7 +19,6 @@ public class UserService : IUserService
 
     public async Task<User?> GetUserByIdAsync(int id)
     {
-        // additional business logic??
         return await _userRepository.GetSingleAsync(id);
     }
 
@@ -30,8 +30,10 @@ public class UserService : IUserService
         if (string.IsNullOrEmpty(password) || password.Length < 6)
             throw new ArgumentException("Password must be at least 6 characters.");
 
-        var existingUser = (await GetAllUsersAsync()).FirstOrDefault(u => u.UserName == userName);
-        if (existingUser != null)
+        var existingUser = await _userRepository.GetMany()
+            .AnyAsync(u => u.UserName.ToLower() == userName.ToLower());
+
+        if (existingUser)
             throw new ArgumentException("Username already exists.");
     }
 
@@ -39,13 +41,9 @@ public class UserService : IUserService
     {
         await ValidateUserCreation(userName, password);
         var hashedPassword = HashPassword(password);
-        Console.WriteLine($"[CreateUserAsync] Hashed Password: {hashedPassword}"); // Debug log
-    
-        var user = new User { UserName = userName, Password = hashedPassword };
+        var user = new User(userName, hashedPassword);
         return await _userRepository.AddAsync(user);
     }
-
-
 
     public async Task UpdateUserAsync(User user)
     {
@@ -63,27 +61,21 @@ public class UserService : IUserService
         {
             throw new ArgumentException($"User with ID {id} does not exist.");
         }
-        
+
         await _userRepository.DeleteAsync(id);
     }
-    
-    
-  
+
     private string HashPassword(string password)
     {
-        using (var sha256 = System.Security.Cryptography.SHA256.Create())
+        using (var sha256 = SHA256.Create())
         {
-            var bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
             return Convert.ToBase64String(bytes);
         }
     }
 
-
-
     public async Task<List<User>> GetAllUsersAsync()
     {
-        var users = _userRepository.GetMany().ToList(); 
-        return await Task.FromResult(users); // Return as an asynchronous operation
+        return await _userRepository.GetMany().ToListAsync();
     }
-
 }

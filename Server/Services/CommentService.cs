@@ -30,7 +30,7 @@ public class CommentService : ICommentService
         ValidateCommentBody(body);
         await EnsurePostAndUserExist(postId, userId);
 
-        var comment = new Comment { Body = body, PostId = postId, UserId = userId };
+        var comment = new Comment(body, postId, userId);
         return await _commentRepository.AddAsync(comment);
     }
 
@@ -78,4 +78,3 @@ public class CommentService : ICommentService
             throw new ArgumentException("Invalid UserId provided.");
     }
 }
-

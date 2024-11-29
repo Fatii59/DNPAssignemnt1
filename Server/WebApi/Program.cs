@@ -4,6 +4,9 @@ using Microsoft.IdentityModel.Tokens;
 using RepostitoryContracts;
 using Services;
 using System.Text;
+using EfcRepositoriess;
+using Microsoft.EntityFrameworkCore;
+using AppContext = EfcRepositoriess.AppContext;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,6 +50,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddDbContext<AppContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 // Configure CORS
 builder.Services.AddCors(options =>
 {
@@ -60,9 +66,9 @@ builder.Services.AddCors(options =>
 });
 
 // Add repositories
-builder.Services.AddScoped<IPostRepository, PostFileRepository>();
-builder.Services.AddScoped<IUserRepository, UserFileRepository>();
-builder.Services.AddScoped<ICommentRepository, CommentFileRepository>();
+builder.Services.AddScoped<ICommentRepository, EfcCommentRepository>();
+builder.Services.AddScoped<IPostRepository, EfcPostRepository>();
+builder.Services.AddScoped<IUserRepository, EfcUserRepository>();
 
 // Add service layer
 builder.Services.AddScoped<IPostService, PostService>();

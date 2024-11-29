@@ -1,4 +1,4 @@
-﻿namespace FileRepositories;
+﻿/*namespace FileRepositories;
 
 using System.Text.Json;
 using Entities;
@@ -156,3 +156,4 @@ public class PostFileRepository : IPostRepository
         }
     }
 }
+*/

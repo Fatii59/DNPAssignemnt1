@@ -24,16 +24,16 @@ public class PostController : ControllerBase
     [Authorize]
     public async Task<ActionResult<PostDTO>> CreatePost([FromBody] CreatePostDTO request)
     {
-        Console.WriteLine($"Authorization Header: {Request.Headers["Authorization"]}");
-
         var userIdClaim = User.FindFirst("Id");
         if (userIdClaim == null)
         {
             return Unauthorized("User is not authenticated.");
         }
 
-        var userId = int.Parse(userIdClaim.Value);
-        Console.WriteLine($"Creating post for User ID: {userId}");
+        if (!int.TryParse(userIdClaim.Value, out var userId))
+        {
+            return Unauthorized("Invalid user ID.");
+        }
 
         var createdPost = await _postService.CreatePostAsync(request.Title, request.Body, userId);
 
@@ -53,37 +53,27 @@ public class PostController : ControllerBase
 
     // Get all posts
     [HttpGet]
-    public async Task<ActionResult<List<PostDTO>>> GetMany()
+    public async Task<ActionResult<List<PostDTO>>> GetMany(int page = 1, int pageSize = 10)
     {
         var posts = await _postService.GetAllPostsAsync();
-    
-        // Dictionary to cache user names by user ID
-        var userCache = new Dictionary<int, string>();
-    
-        var postDtos = new List<PostDTO>();
-        foreach (var post in posts)
-        {
-            // Check if the user's name is already in the cache
-            if (!userCache.TryGetValue(post.UserId, out var userName))
-            {
-                // If not in cache, fetch from the service and store in the cache
-                var user = await _userService.GetUserByIdAsync(post.UserId);
-                userName = user?.UserName ?? "Unknown";
-                userCache[post.UserId] = userName;
-            }
 
-            postDtos.Add(new PostDTO
+        var pagedPosts = posts
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(post => new PostDTO
             {
                 Id = post.Id,
                 Title = post.Title,
                 Body = post.Body,
                 UserId = post.UserId,
-                UserName = userName
-            });
-        }
+                UserName = post.User?.UserName ?? "Unknown",
+                CommentCount = post.Comments.Count
+            })
+            .ToList();
 
-        return Ok(postDtos);
+        return Ok(pagedPosts);
     }
+
 
     // Get a single post by ID
     [HttpGet("{id}")]
@@ -95,19 +85,19 @@ public class PostController : ControllerBase
             return NotFound($"Post with ID {id} not found.");
         }
 
-        var user = await _userService.GetUserByIdAsync(post.UserId);
         var postDto = new PostDTO
         {
             Id = post.Id,
             Title = post.Title,
             Body = post.Body,
             UserId = post.UserId,
-            UserName = user?.UserName ?? "Unknown"
+            UserName = post.User?.UserName ?? "Unknown",
+            CommentCount = post.Comments.Count
         };
 
         return Ok(postDto);
     }
-    
+
     [HttpGet("recent")]
     public async Task<ActionResult<List<PostDTO>>> GetRecentPosts(int count = 5)
     {

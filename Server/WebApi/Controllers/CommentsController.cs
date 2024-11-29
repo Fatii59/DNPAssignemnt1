@@ -11,10 +11,12 @@ namespace WebApi.Controllers;
 public class CommentsController : ControllerBase
 {
     private readonly ICommentService _commentService;
+    private readonly IPostService _postService;
 
-    public CommentsController(ICommentService commentService)
+    public CommentsController(ICommentService commentService, IPostService postService)
     {
         _commentService = commentService;
+        _postService = postService;
     }
 
   
@@ -22,20 +24,28 @@ public class CommentsController : ControllerBase
     [Authorize]
     public async Task<IActionResult> CreateComment([FromBody] CreateCommentDTO request)
     {
-        // Get the user ID from the authenticated user's claims
+        if (string.IsNullOrWhiteSpace(request.Body))
+        {
+            return BadRequest("Comment body cannot be empty.");
+        }
+
+        var postExists = await _postService.GetPostByIdAsync(request.PostId) != null;
+        if (!postExists)
+        {
+            return NotFound($"Post with ID {request.PostId} does not exist.");
+        }
+
         var userIdClaim = User.FindFirst("Id");
-        if (userIdClaim == null)
+        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
         {
             return Unauthorized("User is not authenticated.");
         }
 
-        var userId = int.Parse(userIdClaim.Value);
-
-        // Use the userId from the claims instead of the client-supplied ID
         var createdComment = await _commentService.CreateCommentAsync(request.Body, request.PostId, userId);
 
         return CreatedAtAction(nameof(GetSingleComment), new { id = createdComment.Id }, createdComment);
     }
+
 
 
     [HttpGet("{id}")]
@@ -59,24 +69,28 @@ public class CommentsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<CommentDTO>>> GetManyComments(int? postId = null)
+    [HttpGet]
+    public async Task<ActionResult<List<CommentDTO>>> GetManyComments(int? postId = null, int page = 1, int pageSize = 10)
     {
         var comments = await _commentService.GetAllCommentsAsync();
-    
+
         if (postId.HasValue)
         {
             comments = comments.Where(c => c.PostId == postId.Value).ToList();
         }
 
-        var commentDtos = comments.Select(comment => new CommentDTO
-        {
-            Id = comment.Id,
-            Body = comment.Body,
-            PostId = comment.PostId,
-            UserId = comment.UserId
-        }).ToList();
+        var pagedComments = comments
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(comment => new CommentDTO
+            {
+                Id = comment.Id,
+                Body = comment.Body,
+                PostId = comment.PostId,
+                UserId = comment.UserId
+            }).ToList();
 
-        return Ok(commentDtos);
+        return Ok(pagedComments);
     }
 
 

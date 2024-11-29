@@ -1,15 +1,17 @@
-﻿
+﻿namespace Services;
 
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Entities;
 using RepostitoryContracts;
-
-namespace Services;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 public class PostService : IPostService
 {
     private readonly IPostRepository _postRepository;
     private readonly IUserRepository _userRepository;
-    private readonly  ICommentRepository _commentRepository;
+    private readonly ICommentRepository _commentRepository;
 
     public PostService(IPostRepository postRepository, IUserRepository userRepository, ICommentRepository commentRepository)
     {
@@ -43,7 +45,7 @@ public class PostService : IPostService
     public async Task<Post> CreatePostAsync(string title, string body, int userId)
     {
         await ValidatePost(title, body, userId);
-        var post = new Post { Title = title, Body = body, UserId = userId };
+        var post = new Post(title, body, userId);
         return await _postRepository.AddAsync(post);
     }
 
@@ -67,43 +69,17 @@ public class PostService : IPostService
 
     public async Task<List<Post>> GetAllPostsAsync()
     {
-        var posts = await _postRepository.GetMany();
-        return posts.ToList();
+        var posts = await _postRepository.GetMany().ToListAsync(); // Asynchronous
+        return posts;
     }
-    
+
     public async Task<List<Post>> GetRecentPostsAsync(int count)
     {
-        try
-        {
-            // Fetch all posts from the repository
-            var posts = await _postRepository.GetMany();
-
-            // Ensure users and comments are fetched properly
-            var users = _userRepository.GetMany().ToDictionary(u => u.Id);
-            var commentsGroupedByPost = (await _commentRepository.GetManyAsync())
-                .GroupBy(c => c.PostId)
-                .ToDictionary(g => g.Key, g => g.ToList());
-
-            var recentPosts = posts.OrderByDescending(p => p.CreatedDate).Take(count).ToList();
-
-            foreach (var post in recentPosts)
-            {
-                if (users.TryGetValue(post.UserId, out var user))
-                {
-                    post.User = user;
-                }
-
-                post.Comments = commentsGroupedByPost.GetValueOrDefault(post.Id, new List<Comment>());
-            }
-
-            return recentPosts;
-        }
-        catch (Exception ex)
-        {
-            // Log the exception
-            Console.WriteLine($"Error in GetRecentPostsAsync: {ex.Message}");
-            throw new Exception("Failed to retrieve recent posts", ex);
-        }
+        var posts = await _postRepository.GetMany()
+            .OrderByDescending(p => p.CreatedDate) // Asynchronous
+            .Take(count)
+            .ToListAsync();
+        return posts;
     }
 
 
