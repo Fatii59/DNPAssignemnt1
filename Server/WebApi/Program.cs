@@ -1,10 +1,11 @@
-using FileRepositories;
+using Newtonsoft.Json; // Add this at the top
+using EfcRepositoriess; 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using RepostitoryContracts;
 using Services;
 using System.Text;
-using EfcRepositoriess;
+using Entities;
 using Microsoft.EntityFrameworkCore;
 using AppContext = EfcRepositoriess.AppContext;
 
@@ -50,9 +51,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<AppContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 // Configure CORS
 builder.Services.AddCors(options =>
 {
@@ -69,6 +67,12 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<ICommentRepository, EfcCommentRepository>();
 builder.Services.AddScoped<IPostRepository, EfcPostRepository>();
 builder.Services.AddScoped<IUserRepository, EfcUserRepository>();
+builder.Services.AddScoped(provider =>
+{
+    var factory = new AppContextFactory();
+    return factory.CreateDbContext(args);
+});
+
 
 // Add service layer
 builder.Services.AddScoped<IPostService, PostService>();
@@ -76,6 +80,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 
 var app = builder.Build();
+
+SeedDatabase(app);
 
 app.Use(async (context, next) =>
 {
@@ -102,3 +108,49 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+
+static void SeedDatabase(WebApplication app)
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppContext>();
+
+        var connectionString = context.Database.GetDbConnection().ConnectionString;
+        Console.WriteLine($"Database Connection String: {connectionString}");
+
+        if (!context.Users.Any() && !context.Posts.Any() && !context.Comments.Any())
+        {
+            Console.WriteLine("Seeding database...");
+
+            var basePath = Directory.GetCurrentDirectory();
+            var usersJsonPath = Path.Combine(basePath, "users.json");
+            var postsJsonPath = Path.Combine(basePath, "posts.json");
+            var commentsJsonPath = Path.Combine(basePath, "comments.json");
+
+            var usersJson = File.ReadAllText(usersJsonPath);
+            var postsJson = File.ReadAllText(postsJsonPath);
+            var commentsJson = File.ReadAllText(commentsJsonPath);
+
+            var users = JsonConvert.DeserializeObject<List<User>>(usersJson);
+            var posts = JsonConvert.DeserializeObject<List<Post>>(postsJson);
+            var comments = JsonConvert.DeserializeObject<List<Comment>>(commentsJson);
+
+            if (users != null) context.Users.AddRange(users);
+            if (posts != null) context.Posts.AddRange(posts);
+            if (comments != null) context.Comments.AddRange(comments);
+
+            context.SaveChanges();
+            Console.WriteLine("Database seeding completed.");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error during database seeding: {ex.Message}");
+        Console.WriteLine(ex.StackTrace);
+    }
+}
+
+
+
